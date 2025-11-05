@@ -72,13 +72,13 @@
             display: block;
         }
 
+        /* ADD TRANSITION for controls */
         #top-control-panel {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             z-index: 1000;
-            /* FIX: Use flex to properly align children */
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -87,16 +87,17 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
             color: var(--md-sys-color-on-surface);
             gap: 10px;
-            transition: all 0.3s ease;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
         }
 
+        /* ADD TRANSITION for map and FABs */
         #mapid {
             height: 100%;
             width: 100%;
             z-index: 0;
+            transition: opacity 0.3s ease-in-out;
         }
 
-        /* FAB Container Styling */
         .fab-container {
             position: fixed;
             bottom: 50%;
@@ -105,11 +106,11 @@
             flex-direction: column;
             gap: 16px;
             z-index: 1001;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
         }
 
         /* Speed Dashboard - Browsing Mode */
         #speed-dashboard {
-            /* FIX: Allow dashboard to take middle space */
             flex-grow: 1;
             display: flex;
             align-items: center;
@@ -147,6 +148,16 @@
             transition: background-color 0.3s;
         }
 
+        #current-speed-container #speed-unit {
+            font-size: 0.3em;
+            font-weight: 500;
+            opacity: 1;
+            align-self: flex-end;
+            color: inherit;
+            padding-bottom: 5px;
+        }
+
+
         #current-speed-container.warning {
             background-color: var(--md-sys-color-error);
             color: var(--md-sys-color-on-error);
@@ -162,13 +173,22 @@
         /* 3. Driving Mode Overrides (Mapless HUD)           */
         /* ================================================= */
 
-        /* 3.1 Hide non-HUD elements */
+        /* 3.1 Hide non-HUD elements using opacity/visibility for transition */
         .driving-mode-active #mapid,
+        .driving-mode-active #info-card,
         .driving-mode-active #top-control-panel,
         .driving-mode-active #zoom-controls,
-        .driving-mode-active .fab-container,
+        .driving-mode-active .fab-container {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+            height: 0 !important; /* Ensure they collapse/don't take space */
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* Elements to stay hidden in HUD mode (no transition needed) */
         .driving-mode-active #driving-mode-button,
-        .driving-mode-active #info-card,
         .driving-mode-active #traffic-overlay,
         .driving-mode-active #speed-dashboard,
         .driving-mode-active #driving-trap-alert {
@@ -177,7 +197,9 @@
 
         /* 3.2 Mapless HUD Container */
         #mapless-hud {
-            display: none;
+            display: flex; /* Keep display: flex for layout calculation */
+            opacity: 0;
+            visibility: hidden;
             flex-direction: column;
             align-items: center;
             justify-content: center;
@@ -188,10 +210,12 @@
             left: 0;
             z-index: 100;
             background-color: var(--md-sys-color-background);
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
         }
 
         .driving-mode-active #mapless-hud {
-            display: flex !important;
+            opacity: 1;
+            visibility: visible;
         }
 
         /* 3.3 HUD Component Sizing */
@@ -231,6 +255,21 @@
             align-items: baseline;
             gap: 8px;
             font-weight: 700;
+            transition: background-color 0.3s;
+        }
+
+        #current-speed-container-hud.warning {
+            background-color: var(--md-sys-color-error);
+            color: var(--md-sys-color-on-error);
+        }
+
+        #current-speed-container-hud #speed-unit-hud {
+            font-size: 0.3em;
+            font-weight: 500;
+            opacity: 1;
+            align-self: flex-end;
+            color: inherit;
+            padding-bottom: 5px;
         }
 
         /* 3.4 HUD Alert & Log (Styles Preserved) */
@@ -248,6 +287,7 @@
             text-align: center;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
             max-width: 90%;
+            transition: opacity 0.3s ease-in-out;
         }
 
         #driving-trap-alert-hud.visible {
@@ -296,9 +336,7 @@
             color: var(--md-sys-color-primary);
         }
 
-        /* 3.5 Exit Button FIX: Make it work in both modes */
-
-        /* Default position: Hidden in normal mode */
+        /* 3.5 Exit Button */
         #exit-driving-mode-button {
              display: none;
         }
@@ -317,7 +355,7 @@
 
         /* Ensure the driving mode button shows in the top bar in normal mode */
         #driving-mode-button {
-             order: -1; /* Place at the far left of the flex container */
+             order: -1;
         }
 
         /* ================================================= */
@@ -399,7 +437,7 @@
             z-index: 1002;
             overflow-y: auto;
             transform: translateY(0);
-            transition: transform 0.3s ease-in-out;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
         }
 
         #info-card.collapsed {
@@ -437,6 +475,10 @@
             justify-content: space-between;
             align-items: center;
             gap: 10px;
+        }
+
+        .trap-item:last-child {
+            border-bottom: none;
         }
 
         .trap-details {
@@ -627,7 +669,8 @@
 <script>
     // --- CONSTANTS ---
     const initialCoords = [23.6, 120.9];
-    const PROXIMITY_RANGE_KM = 0.5; // 500 meters
+    const PROXIMITY_RANGE_KM = 0.5; // 500 meters for alerts
+    const LIST_RANGE_KM = 5; // 5 km for the bottom list
     const DEFAULT_ZOOM = 14;
     const DRIVING_MODE_ZOOM = 17;
 
@@ -666,6 +709,7 @@
     const speedingLogCountElement = document.getElementById('speeding-trap-count');
     const drivingModeButton = document.getElementById('driving-mode-button');
     const exitDrivingModeButton = document.getElementById('exit-driving-mode-button');
+    const speedContainerHud = document.getElementById('current-speed-container-hud');
 
 
     // Initial map theme setup
@@ -716,6 +760,7 @@
     function rotateMap(heading) {
         if (!rotationTarget || heading === null) return;
         const rotationAngle = -heading;
+        // Apply rotation to the entire map pane
         rotationTarget.style.transform = `rotate(${rotationAngle}deg)`;
     }
 
@@ -727,17 +772,15 @@
     function toggleDrivingMode() {
         isDrivingMode = !isDrivingMode;
         const body = document.body;
-        const mapContainer = document.getElementById('map-container');
 
         if (isDrivingMode) {
             body.classList.add('driving-mode-active');
-            mapContainer.classList.add('driving-mode-active');
-            maplessHud.style.display = 'flex';
 
             isHeadingUpMode = true;
+            recenterIcon.textContent = 'navigation'; // Set to navigation icon
+            trafficOverlay.style.display = 'none'; // Hide traffic overlay
 
-            // Hide the normal mode button and show the HUD exit button
-            drivingModeButton.style.display = 'none';
+            // Show the HUD exit button
             exitDrivingModeButton.style.display = 'block';
 
             // Disable map interactions
@@ -754,14 +797,13 @@
 
         } else {
             body.classList.remove('driving-mode-active');
-            mapContainer.classList.remove('driving-mode-active');
-            maplessHud.style.display = 'none';
 
-            // Show the normal mode button and hide the HUD exit button
-            drivingModeButton.style.display = 'block';
+            // Hide the HUD exit button
             exitDrivingModeButton.style.display = 'none';
 
             isHeadingUpMode = false;
+            recenterIcon.textContent = 'my_location'; // Revert icon
+
             if (rotationTarget) {
                 rotationTarget.style.transform = '';
             }
@@ -781,6 +823,7 @@
             map.setView(map.getCenter(), DEFAULT_ZOOM);
         }
 
+        // Delay invalidation to allow CSS transitions to complete
         setTimeout(() => {
             map.invalidateSize();
             if (userMarker) {
@@ -826,16 +869,17 @@
                     statusMsg.textContent = `Loaded ${totalTrapCount} speed traps. Starting location tracking...`;
                     startTracking();
                 } else {
-                    statusMsg.textContent = "Error: Could not load GeoJSON data from Android. Check native bridge implementation.";
+                    statusMsg.textContent = "Error: Android bridge returned empty data. Starting tracking without trap data.";
+                    startTracking();
                 }
             } else {
-                 statusMsg.textContent = "Error: Android bridge (Android.getGeoJsonData) is not available. Using sample data (if available).";
-                 // Fallback: start tracking anyway, but no traps will be found
+                 statusMsg.textContent = "Error: Android bridge not found. Starting tracking without trap data.";
                  startTracking();
             }
         } catch (e) {
-            statusMsg.textContent = `Error: Failed to process GeoJSON. ${e.message}`;
+            statusMsg.textContent = `Error: Failed to process GeoJSON. ${e.message}. Starting tracking without trap data.`;
             console.error("JSON/Load Error:", e);
+            startTracking();
         }
     }
 
@@ -873,13 +917,13 @@
                     : 0;
                 const roundedSpeedKmh = Math.round(speedKmh);
 
-                // 1. Update Speed Display (for all modes)
+                // 1. Update Current Speed Display
                 document.getElementById('current-speed-value').textContent = roundedSpeedKmh;
                 if (currentSpeedValueHud) {
                     currentSpeedValueHud.textContent = roundedSpeedKmh;
                 }
 
-                // 2. Update User Marker and Accuracy Circle (logic preserved)
+                // 2. Update User Marker, Accuracy Circle, Map Panning, and Rotation (logic preserved)
                 if (userMarker) {
                     userMarker.setLatLng(userCoords);
                     accuracyCircle.setLatLng(userCoords).setRadius(accuracy);
@@ -902,7 +946,6 @@
 
                 const iconSpan = userMarker ? userMarker._icon.querySelector('span') : null;
 
-                // 3. Map Panning and Rotation Logic (preserved)
                 if (isFollowingMode) {
                     if (heading !== null && heading >= 0) {
                         rotateMap(heading);
@@ -928,8 +971,9 @@
                 }
                 userMarker.update();
 
-                // 4. Calculate proximity to traps
+                // 3. Calculate proximity to traps (FIXED LOGIC)
                 let nearestLimit = null;
+                let nearestDistanceKm = Infinity; // Correctly track the shortest distance
                 let nearestTrapName = 'Speed Trap Ahead!';
                 let nearestTrapUniqueId = null;
 
@@ -938,55 +982,76 @@
                     geoJsonLayer.eachLayer(function(layer) {
                         const latlng = layer.getLatLng();
                         const distanceKm = calculateHaversineDistance(userLat, userLng, latlng.lat, latlng.lng);
-                        const speedLimitValue = layer.feature.properties.name
-                            ? parseFloat(layer.feature.properties.name)
-                            : null;
+                        const props = layer.feature.properties;
 
-                        if (speedLimitValue !== null) {
-                            if (distanceKm <= PROXIMITY_RANGE_KM) {
-                                if (nearestLimit === null || distanceKm < PROXIMITY_RANGE_KM) {
-                                    nearestLimit = Math.round(speedLimitValue);
-                                    nearestTrapUniqueId = layer.feature.id || layer._leaflet_id;
+                        // Robust check for common speed limit property names
+                        let speedLimitValue = props.name ? parseFloat(props.name) : null;
+                        if (speedLimitValue === null || isNaN(speedLimitValue)) {
+                            speedLimitValue = props.limit ? parseFloat(props.limit) : null;
+                        }
+                        if (speedLimitValue === null || isNaN(speedLimitValue)) {
+                            speedLimitValue = props.speed ? parseFloat(props.speed) : null;
+                        }
 
-                                    const rawDescription = layer.getPopup().getContent();
-                                    const addressMatch = rawDescription.match(/設置地址:\s*([^<]*)/);
-                                    nearestTrapName = addressMatch && addressMatch[1] ? addressMatch[1].trim() : 'Speed Trap Ahead!';
-                                }
+
+                        if (speedLimitValue !== null && !isNaN(speedLimitValue)) {
+
+                            // 3a. Find the absolute nearest trap (regardless of range)
+                            if (distanceKm < nearestDistanceKm) {
+                                nearestDistanceKm = distanceKm;
+                                nearestLimit = Math.round(speedLimitValue);
+                                nearestTrapUniqueId = layer.feature.id || layer._leaflet_id;
+
+                                // Extract description/name for HUD
+                                const rawDescription = layer.getPopup().getContent();
+                                const addressMatch = rawDescription.match(/設置地址:\s*([^<]*)/);
+                                nearestTrapName = addressMatch && addressMatch[1] ? addressMatch[1].trim() : 'Speed Trap Ahead!';
                             }
 
-                            const rawDescription = layer.getPopup().getContent();
-                            const addressMatch = rawDescription.match(/設置地址:\s*([^<]*)/);
-                            const name = addressMatch && addressMatch[1] ? addressMatch[1].trim() : 'Speed Trap';
-                            nearbyTraps.push({ name, distance: distanceKm, speedLimit: speedLimitValue });
+                            // 3b. Collect all traps within LIST_RANGE_KM (5km) for the Info Card list
+                            if (distanceKm <= LIST_RANGE_KM) {
+                                const rawDescription = layer.getPopup().getContent();
+                                const addressMatch = rawDescription.match(/設置地址:\s*([^<]*)/);
+                                const name = addressMatch && addressMatch[1] ? addressMatch[1].trim() : 'Speed Trap';
+                                nearbyTraps.push({ name, distance: distanceKm, speedLimit: speedLimitValue });
+                            }
                         }
                     });
                 }
 
-                // 5. Update Top Bar Speed Limit and Warning
+                // 4. Update Top Bar Speed Limit Sign (Browsing Mode & HUD Mode)
                 const speedLimitSign = document.getElementById('speed-limit-value');
                 const speedContainer = document.getElementById('current-speed-container');
 
                 const currentLimit = nearestLimit !== null ? nearestLimit : '--';
 
+                // Update browsing mode speed limit sign (Top Bar)
                 speedLimitSign.textContent = currentLimit;
-                speedContainer.classList.remove('warning');
 
-                if (speedLimitValueHud) { speedLimitValueHud.textContent = currentLimit; }
-                if (currentSpeedValueHud) { currentSpeedValueHud.parentElement.classList.remove('warning'); }
-
-                if (nearestLimit !== null && roundedSpeedKmh > nearestLimit) {
-                    speedContainer.classList.add('warning');
-                    if (currentSpeedValueHud) { currentSpeedValueHud.parentElement.classList.add('warning'); }
+                // Update HUD mode speed limit sign
+                if (speedLimitValueHud) {
+                    speedLimitValueHud.textContent = currentLimit;
                 }
 
-                // 6. Update Driving Mode HUD Alert AND LOGIC
-                if (isDrivingMode && nearestLimit !== null) {
-                    drivingAlertHud.classList.add('visible');
-                    document.getElementById('alert-limit-value-hud').textContent = nearestLimit;
-                    document.getElementById('alert-trap-description-hud').textContent = nearestTrapName;
+                // Reset warning state
+                speedContainer.classList.remove('warning');
+                if (speedContainerHud) { speedContainerHud.classList.remove('warning'); }
 
-                    // NEW: Speeding Log Logic
-                    if (roundedSpeedKmh > nearestLimit) {
+
+                // 5. Apply warning state and Update Driving Mode HUD Alert
+                const withinProximity = nearestDistanceKm <= PROXIMITY_RANGE_KM;
+
+                if (nearestLimit !== null && roundedSpeedKmh > nearestLimit && withinProximity) {
+                    // Apply warning color in both modes if speeding near a trap
+                    speedContainer.classList.add('warning');
+                    if (speedContainerHud) { speedContainerHud.classList.add('warning'); }
+
+                    if (isDrivingMode) {
+                        drivingAlertHud.classList.add('visible');
+                        document.getElementById('alert-limit-value-hud').textContent = nearestLimit;
+                        document.getElementById('alert-trap-description-hud').textContent = nearestTrapName;
+
+                        // NEW: Speeding Log Logic
                         if (nearestTrapUniqueId !== lastPassedSpeedTrapId) {
                             speedingTrapsCount++;
                             lastPassedSpeedTrapId = nearestTrapUniqueId;
@@ -995,30 +1060,31 @@
                     }
 
                 } else {
-                    drivingAlertHud.classList.remove('visible');
-
-                    if (nearestLimit === null) {
+                    if (isDrivingMode) {
+                        drivingAlertHud.classList.remove('visible');
+                    }
+                    if (!withinProximity) {
                          lastPassedSpeedTrapId = null;
                     }
                 }
 
-                // 7. Update the Info Card list (Only when not in driving mode)
+
+                // 6. Update the Info Card list (Only when not in driving mode)
                 if (!isDrivingMode) {
                     const trapList = document.getElementById('trap-list');
                     trapList.innerHTML = '';
                     nearbyTraps.sort((a, b) => a.distance - b.distance);
 
                     const nearbyStatus = document.getElementById('status-message');
-                    const filteredTraps = nearbyTraps.filter(t => t.distance <= 5);
 
-                    if (filteredTraps.length > 0) {
+                    if (nearbyTraps.length > 0) {
                         nearbyStatus.style.display = 'none';
                     } else {
                         nearbyStatus.style.display = 'block';
                         nearbyStatus.textContent = 'No speed traps found within the search range.';
                     }
 
-                    filteredTraps.slice(0, 10).forEach(trap => {
+                    nearbyTraps.slice(0, 10).forEach(trap => {
                         const listItem = document.createElement('li');
                         const roundedLimit = Math.round(trap.speedLimit);
                         listItem.className = 'trap-item';
