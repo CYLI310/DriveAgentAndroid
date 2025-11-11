@@ -1,6 +1,6 @@
 # DriveAgent
 
-DriveAgent is an Android application that displays a map with speed trap locations. The application uses a WebView to render a map from a local HTML file and leverages a JavaScript interface to interact with native Android code for location updates and data retrieval.
+DriveAgent is an Android application that displays a map with speed trap locations. The application uses a WebView to render a map from a local HTML file and leverages a JavaScript interface to interact with native Android code for location updates and data retrieval. This app is fully available offline.
 
 ## Features
 
