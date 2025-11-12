@@ -106,7 +106,7 @@
             z-index: 0;
         }
 
-        /* FAB Container Styling - FLOATING CARD */
+        /* FAB Container Styling - FLOATING CARD (Corrected to Middle Right) */
         .fab-container {
             position: fixed;
             top: 50%; /* Center vertically */
@@ -349,10 +349,6 @@
             transition: background-color 0.15s ease-in-out;
         }
 
-        .setting-item:hover {
-            background-color: rgba(var(--md-sys-color-on-surface-rgb), 0.04);
-        }
-
         .setting-item-header {
             display: flex;
             justify-content: space-between;
@@ -401,9 +397,107 @@
             cursor: pointer;
             accent-color: var(--md-sys-color-primary);
         }
+
+        /* ================================================= */
+        /* 6. Splash Screen Styles (omitted for brevity)     */
+        /* ================================================= */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--md-sys-color-background);
+            z-index: 4000; /* Highest priority */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            transition: opacity 0.5s ease-out;
+        }
+
+        #splash-screen.fade-out {
+            opacity: 0;
+        }
+
+        #splash-logo {
+            font-size: 4em;
+            color: var(--md-sys-color-primary);
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        #splash-text {
+            color: var(--md-sys-color-on-background);
+            font-size: 1.5em;
+            font-weight: 500;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.1); opacity: 1; }
+        }
+
+        /* ================================================= */
+        /* 7. Custom Leaflet Popup Styling (Material 3)      */
+        /* ================================================= */
+        .leaflet-popup-content-wrapper {
+            background: var(--md-sys-color-surface-container-high);
+            color: var(--md-sys-color-on-surface);
+            border-radius: 16px; /* Material 3 large radius */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+            padding: 0; /* Remove Leaflet's default padding */
+        }
+        .leaflet-popup-content {
+            margin: 0;
+            padding: 16px;
+            font-size: 0.95em;
+            font-weight: 500;
+            text-align: left;
+        }
+        .leaflet-popup-tip {
+            /* Ensures the tip color matches the wrapper */
+            background: var(--md-sys-color-surface-container-high);
+            box-shadow: none;
+        }
+
+        /* Style the popup content elements */
+        .popup-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--md-sys-color-on-surface); /* Main text color */
+        }
+        .popup-header .material-symbols-outlined {
+            font-size: 24px;
+            color: var(--md-sys-color-error); /* Use error color for alert icon */
+        }
+        .popup-speed-limit-container {
+             margin-bottom: 8px;
+             font-size: 1.1em;
+        }
+        .popup-speed-limit {
+            font-weight: 900;
+            font-size: 1.3em;
+            color: var(--md-sys-color-primary); /* Highlight the limit value */
+            margin-right: 5px;
+        }
+        .popup-description {
+            color: var(--md-sys-color-on-surface-variant);
+            line-height: 1.4;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
+<div id="splash-screen">
+    <span id="splash-logo" class="material-symbols-outlined">navigation</span>
+    <div id="splash-text">Loading Radar Map...</div>
+</div>
+
 <div id="map-container">
 
     <div id="top-control-panel">
@@ -510,6 +604,23 @@
 
             <li class="setting-item">
                 <div class="setting-item-header">
+                    <span>Language / 語言</span>
+                </div>
+                <div class="setting-item-description">
+                    Choose the application interface language.
+                </div>
+                <div class="setting-controls theme-radio-group">
+                    <label>
+                        <input type="radio" name="language-select" id="lang-en" value="en" checked> English
+                    </label>
+                    <label>
+                        <input type="radio" name="language-select" id="lang-zh" value="zh"> 繁體中文
+                    </label>
+                </div>
+            </li>
+
+            <li class="setting-item">
+                <div class="setting-item-header">
                     <span>About This App</span>
                 </div>
                 <div class="setting-item-description">
@@ -548,26 +659,25 @@
 </div>
 
 <script>
-    // --- COOKIE UTILITY FUNCTIONS (omitted for brevity) ---
-    function setCookie(name, value, days) {
-        let expires = "";
-        if (days) {
-            const date = new Date();
-            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            expires = "; expires=" + date.toUTCString();
+    // --- NATIVE BRIDGE UTILITY FUNCTIONS (REPLACEMENT FOR COOKIES/LOCALSTORAGE) ---
+    function saveSetting(name, value) {
+        // Use the Kotlin bridge if available
+        if (typeof AndroidSettingsBridge !== 'undefined') {
+            AndroidSettingsBridge.saveSetting(name, value);
+        } else {
+            // Fallback for browser/testing environment (using localStorage as requested)
+            localStorage.setItem(name, value);
         }
-        document.cookie = name + "=" + (value || "") + expires + "; path=/; SameSite=Lax";
     }
 
-    function getCookie(name) {
-        const nameEQ = name + "=";
-        const ca = document.cookie.split(';');
-        for(let i=0; i < ca.length; i++) {
-            let c = ca[i];
-            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+    function getSetting(name) {
+        if (typeof AndroidSettingsBridge !== 'undefined') {
+            // Returns null if not found
+            return AndroidSettingsBridge.getSetting(name);
+        } else {
+            // Fallback for browser/testing environment (using localStorage as requested)
+            return localStorage.getItem(name);
         }
-        return null;
     }
 
     // --- CONSTANTS ---
@@ -582,6 +692,79 @@
         LIGHT: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
         DARK: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
     };
+
+    // --- LANGUAGE DICTIONARY ---
+    const DICT = {
+        'en': {
+            'appTitle': 'Taiwan Speed Trap Radar (Driving Mode)',
+            'exitDrivingMode': 'Exit Driving Mode',
+            'toggleDrivingMode': 'Toggle Driving Mode',
+            'zoomIn': 'Zoom In',
+            'zoomOut': 'Zoom Out',
+            'settings': 'Settings',
+            'speedUnit': 'km/h',
+            'trapAlert': 'Speed Trap Ahead!',
+            'trapAlertUnknown': 'Unknown Speed Trap Ahead!',
+            'alertLimitUnit': 'km/h',
+            'nearbyTrapsTitle': 'Nearby Speed Traps',
+            'total': 'Total',
+            'statusLocating': 'Locating you...',
+            'statusTracking': 'Tracking live. Accuracy: ±{acc}m. Found {count} traps.',
+            'statusNoTraps': 'No speed traps found within the search range.',
+            'statusLoadError': 'Error: Failed to process GeoJSON. Starting location tracking...',
+            'statusAndroidError': 'Error: Android bridge is unavailable. Starting location tracking without trap data.',
+            'popupHeader': 'Fixed Speed Trap',
+            'popupLimitUnit': 'km/h Limit',
+            'popupLimitMissing': 'Limit not specified in data',
+            'locationDetailsNotFound': 'Location details not explicitly found.',
+            'uiDarkMode': 'Dark UI Mode',
+            'uiDarkModeDesc': 'Switch the entire app interface between light and dark themes.',
+            'alertProximity': 'Alert Proximity',
+            'alertProximityDesc': 'Distance before a trap to trigger a warning.',
+            'mapTileTheme': 'Map Tile Theme',
+            'mapTileThemeDesc': 'Choose the visual style for the map tiles (separate from UI theme).',
+            'aboutApp': 'About This App',
+            'aboutAppDesc': 'Version 1.3.0. Data from open sources.',
+            'locationDenied': '❌ **Geolocation Denied!** Please enable location services for this app in your device/browser settings.',
+            'locationUnavailable': '⚠️ **Location Unavailable!** Your position could not be determined. Check GPS signal.',
+            'locationTimeout': '⏳ **Location Timeout!** Took too long to get a fix. **Attempting restart...**',
+        },
+        'zh': {
+            'appTitle': '台灣測速照相雷達 (駕駛模式)',
+            'exitDrivingMode': '離開駕駛模式',
+            'toggleDrivingMode': '切換駕駛模式',
+            'zoomIn': '放大',
+            'zoomOut': '縮小',
+            'settings': '設定',
+            'speedUnit': '公里/小時',
+            'trapAlert': '前方有測速照相!',
+            'trapAlertUnknown': '前方有測速照相 (限速未知)!',
+            'alertLimitUnit': '公里/小時',
+            'nearbyTrapsTitle': '附近測速照相',
+            'total': '總數',
+            'statusLocating': '定位中...',
+            'statusTracking': '即時追蹤中。準確度：±{acc}米。已載入 {count} 個點位。',
+            'statusNoTraps': '在搜索範圍內沒有發現測速照相。',
+            'statusLoadError': '錯誤：GeoJSON 處理失敗。開始位置追蹤...',
+            'statusAndroidError': '錯誤：Android 橋接器不可用。未載入照相點位，開始位置追蹤。',
+            'popupHeader': '固定式測速照相',
+            'popupLimitUnit': '公里/小時 限速',
+            'popupLimitMissing': '數據中未指定限速',
+            'locationDetailsNotFound': '未找到明確的位置詳細信息。',
+            'uiDarkMode': '深色介面模式',
+            'uiDarkModeDesc': '切換應用程式介面的亮色和深色主題。',
+            'alertProximity': '警報距離',
+            'alertProximityDesc': '觸發警告前與測速照相的距離。',
+            'mapTileTheme': '地圖圖塊主題',
+            'mapTileThemeDesc': '選擇地圖圖塊的視覺樣式（與介面主題分開）。',
+            'aboutApp': '關於此應用程式',
+            'aboutAppDesc': '版本 1.3.0。數據來源於開放資料。',
+            'locationDenied': '❌ **定位功能被拒!** 請在設備/瀏覽器設置中啟用此應用的位置服務。',
+            'locationUnavailable': '⚠️ **位置不可用!** 無法確定您的位置。請檢查GPS訊號。',
+            'locationTimeout': '⏳ **定位超時!** 獲取位置花費時間過長。**嘗試重新啟動...**',
+        }
+    };
+
 
     // --- STATE AND MAP INITIALIZATION ---
     const map = L.map('mapid', { zoomControl: false }).setView(initialCoords, 8);
@@ -600,11 +783,12 @@
     let rotationTarget;
     let lastInfoCardUpdate = 0;
     let isTrackingFrozen = false;
+    let currentLanguage = 'en';
 
-    // DOM elements (omitted for brevity)
+    // DOM elements
     const trafficOverlay = document.getElementById('traffic-overlay');
     const trafficFab = document.getElementById('traffic-fab');
-    const recenterIcon = document.getElementById('recenter-icon');
+    const recenterIcon = document.getElementById('recenter-and-rotate-fab');
     const closeTrafficButton = document.getElementById('close-traffic');
     const mapThemeIcon = document.getElementById('map-theme-toggle');
     const settingsOverlay = document.getElementById('settings-overlay');
@@ -612,13 +796,76 @@
     const proximityDisplay = document.getElementById('proximity-range-display');
     const themeRadios = document.querySelectorAll('input[name="map-theme"]');
     const globalDarkModeSwitch = document.getElementById('global-dark-mode-switch');
+    const langRadios = document.querySelectorAll('input[name="language-select"]');
 
 
-    // --- SETTINGS LOGIC (omitted for brevity) ---
+    // --- NEW TRANSLATION FUNCTION ---
+    function translateUI() {
+        const dict = DICT[currentLanguage];
+
+        // 1. Core Labels
+        document.title = dict.appTitle;
+        document.getElementById('current-speed-value').nextElementSibling.textContent = dict.speedUnit;
+
+        // 2. Info Card
+        // The innerHTML update for the info card header is crucial for showing the translated title and 'Total' count
+        document.querySelector('#info-card-header h4').innerHTML = `${dict.nearbyTrapsTitle} (<span id="trap-count">${totalTrapCount}</span> ${dict.total})`;
+
+        // 3. Settings Panel
+        document.querySelector('#settings-header h3').textContent = dict.settings;
+
+        // UI Dark Mode
+        document.querySelector('li:nth-child(1) .setting-item-header span:nth-child(1)').textContent = dict.uiDarkMode;
+        document.querySelector('li:nth-child(1) .setting-item-description').textContent = dict.uiDarkModeDesc;
+
+        // Alert Proximity
+        const proximityHeader = document.querySelector('li:nth-child(2) .setting-item-header span:nth-child(1)');
+        proximityHeader.textContent = dict.alertProximity;
+        document.querySelector('li:nth-child(2) .setting-item-description').textContent = dict.alertProximityDesc;
+        updateProximityDisplay(PROXIMITY_RANGE_KM); // Update display with correct unit
+
+        // Map Tile Theme
+        const mapThemeHeader = document.querySelector('li:nth-child(3) .setting-item-header span:nth-child(1)');
+        mapThemeHeader.textContent = dict.mapTileTheme;
+        document.querySelector('li:nth-child(3) .setting-item-description').textContent = dict.mapTileThemeDesc;
+        document.getElementById('theme-light').nextSibling.textContent = currentLanguage === 'zh' ? '亮色' : 'Light';
+        document.getElementById('theme-dark').nextSibling.textContent = currentLanguage === 'zh' ? '深色' : 'Dark';
+
+        // Language Toggle
+        const langItem = document.querySelector('li:nth-child(4)');
+        langItem.querySelector('.setting-item-header span:nth-child(1)').textContent = currentLanguage === 'zh' ? '語言 / Language' : 'Language / 語言';
+        langItem.querySelector('.setting-item-description').textContent = currentLanguage === 'zh' ? '選擇應用程式介面語言。' : 'Choose the application interface language.';
+
+        // About App
+        const aboutAppHeader = document.querySelector('li:nth-child(5) .setting-item-header span:nth-child(1)');
+        aboutAppHeader.textContent = dict.aboutApp;
+        document.querySelector('li:nth-child(5) .setting-item-description').textContent = dict.aboutAppDesc;
+
+        // Set radio buttons correctly
+        document.getElementById(`lang-${currentLanguage}`).checked = true;
+
+        // Also update the UI components' aria-labels for accessibility
+        document.getElementById('driving-mode-button').setAttribute('aria-label', dict.toggleDrivingMode);
+        document.getElementById('exit-driving-mode-button').setAttribute('aria-label', dict.exitDrivingMode);
+        document.getElementById('settings-button').setAttribute('aria-label', dict.settings);
+
+        // Re-run the status message update to translate it
+        const statusMsg = document.getElementById('status-message');
+        if (statusMsg.textContent.includes('Tracking live') || statusMsg.textContent.includes('即時追蹤中')) {
+             // We can't access `position` here reliably, so just show initial tracking message
+             statusMsg.textContent = dict.statusTracking.replace('{acc}', '...').replace('{count}', totalTrapCount);
+        } else if (statusMsg.textContent.includes('Locating') || statusMsg.textContent.includes('定位中')) {
+            statusMsg.textContent = dict.statusLocating;
+        }
+    }
+
+
+    // --- SETTINGS LOGIC ---
     function loadSettings() {
-        const proximity = getCookie('proximityRange');
-        const mapTheme = getCookie('mapTheme');
-        const uiTheme = getCookie('uiTheme');
+        const proximity = getSetting('proximityRange');
+        const mapTheme = getSetting('mapTheme');
+        const uiTheme = getSetting('uiTheme');
+        const language = getSetting('language'); // <-- NEW
 
         // 1. UI Theme
         if (uiTheme === 'dark') {
@@ -642,9 +889,6 @@
         if (proximity) {
             PROXIMITY_RANGE_KM = parseFloat(proximity);
             proximitySlider.value = PROXIMITY_RANGE_KM;
-            updateProximityDisplay(PROXIMITY_RANGE_KM);
-        } else {
-            updateProximityDisplay(PROXIMITY_RANGE_KM);
         }
 
         // 3. Map Theme
@@ -656,13 +900,29 @@
                 isLightMode = true;
                 document.getElementById('theme-light').checked = true;
             }
+        } else {
+             // Default to Light map theme
+            document.getElementById('theme-light').checked = true;
         }
+
+        // 4. Language
+        if (language && DICT[language]) {
+            currentLanguage = language;
+        } else {
+            // Default to English if not set
+            currentLanguage = 'en';
+        }
+
+        // Apply all UI translations and updates
+        translateUI();
+        initializeMapTheme();
     }
 
     function saveSettings() {
-        setCookie('proximityRange', PROXIMITY_RANGE_KM.toFixed(1), 365);
-        setCookie('mapTheme', isLightMode ? 'light' : 'dark', 365);
-        setCookie('uiTheme', isUIDarkMode ? 'dark' : 'light', 365);
+        saveSetting('proximityRange', PROXIMITY_RANGE_KM.toFixed(1));
+        saveSetting('mapTheme', isLightMode ? 'light' : 'dark');
+        saveSetting('uiTheme', isUIDarkMode ? 'dark' : 'light');
+        saveSetting('language', currentLanguage); // <-- NEW
     }
 
     function updateProximityDisplay(km) {
@@ -681,9 +941,13 @@
     }
 
 
-    // --- MAP THEME (omitted for brevity) ---
+    // --- MAP THEME ---
 
     function initializeMapTheme() {
+        if (currentTileLayer) {
+            map.removeLayer(currentTileLayer);
+        }
+
         const themeUrl = isLightMode ? MAP_THEMES.LIGHT : MAP_THEMES.DARK;
         currentTileLayer = L.tileLayer(themeUrl, {
             maxZoom: 19,
@@ -711,7 +975,7 @@
     }
 
 
-    // --- ROTATION UTILITY (omitted for brevity) ---
+    // --- ROTATION UTILITY ---
 
     function initializeRotationTarget() {
         const mapPane = map.getPane('mapPane');
@@ -746,7 +1010,7 @@
             mapContainer.classList.add('driving-mode-active');
             isHeadingUpMode = true;
             isTrackingFrozen = false;
-            recenterIcon.textContent = 'navigation';
+            recenterIcon.querySelector('span').textContent = 'navigation';
             trafficOverlay.style.display = 'none';
 
             map.dragging.disable();
@@ -762,7 +1026,7 @@
             mapContainer.classList.remove('driving-mode-active');
             isHeadingUpMode = false;
             isTrackingFrozen = false;
-            recenterIcon.textContent = 'my_location';
+            recenterIcon.querySelector('span').textContent = 'my_location';
 
             if (rotationTarget) { rotationTarget.style.transform = ''; }
             const iconSpan = userMarker ? userMarker._icon.querySelector('span') : null;
@@ -787,10 +1051,10 @@
         }, 350);
     }
 
-    // --- GEOJSON LOADING FUNCTION (omitted for brevity) ---
+    // --- GEOJSON LOADING FUNCTION ---
     function loadGeojsonData() {
         const statusMsg = document.getElementById('status-message');
-        let finalStatus = "Locating you...";
+        let finalStatus = DICT[currentLanguage].statusLocating;
 
         try {
             if (typeof Android !== 'undefined' && Android.getGeoJsonData) {
@@ -810,9 +1074,38 @@
                                 fillOpacity: 0.8
                             });
                         },
+                        // *** MODIFIED POPUP GENERATION FOR ROBUSTNESS AND TRANSLATION ***
                         onEachFeature: function (feature, layer) {
-                            if (feature.properties && feature.properties.description) {
-                                layer.bindPopup(`🚨 **Speed Trap**<br>${feature.properties.description}`);
+                            if (feature.properties) {
+                                const limit = feature.properties.name;
+                                const description = feature.properties.description || 'No details available.';
+
+                                // Extract the address, typically contained in the description field
+                                const addressMatch = description.match(/設置地址:\s*([^<]*)/);
+                                const address = addressMatch && addressMatch[1] ? addressMatch[1].trim() : DICT[currentLanguage].locationDetailsNotFound;
+
+                                // Conditional speed limit display based on data presence
+                                const speedLimitHtml = limit
+                                    ? `<span class="popup-speed-limit">${limit}</span> <span style="font-size: 1em;">${DICT[currentLanguage].popupLimitUnit}</span>`
+                                    : `<span class="popup-description" style="color: var(--md-sys-color-error);">${DICT[currentLanguage].popupLimitMissing}</span>`;
+
+                                const popupContent = `
+                                    <div class="popup-header">
+                                        <span class="material-symbols-outlined">camera_indoor</span>
+                                        ${DICT[currentLanguage].popupHeader}
+                                    </div>
+                                    <div class="popup-speed-limit-container">
+                                        ${speedLimitHtml}
+                                    </div>
+                                    <div class="popup-description">
+                                        ${address}
+                                    </div>
+                                `;
+
+                                layer.bindPopup(popupContent, {
+                                    className: 'custom-popup',
+                                    offset: L.point(0, -10)
+                                });
                             }
                         }
                     }).addTo(map);
@@ -820,15 +1113,15 @@
                     totalTrapCount = data.features.length;
                     document.getElementById('trap-count').textContent = totalTrapCount;
 
-                    finalStatus = `Loaded ${totalTrapCount} speed traps. Starting location tracking...`;
+                    finalStatus = DICT[currentLanguage].statusTracking.replace('{acc}', '...').replace('{count}', totalTrapCount); // Initial tracking message
                 } else {
-                    finalStatus = "Error: Could not load GeoJSON data from Android. Starting location tracking without trap data.";
+                    finalStatus = DICT[currentLanguage].statusAndroidError;
                 }
             } else {
-                 finalStatus = "Error: Android bridge is unavailable. Starting location tracking without trap data.";
+                 finalStatus = DICT[currentLanguage].statusAndroidError;
             }
         } catch (e) {
-            finalStatus = `Error: Failed to process GeoJSON (${e.message}). Starting location tracking...`;
+            finalStatus = DICT[currentLanguage].statusLoadError;
             console.error("JSON/Load Error:", e);
         }
 
@@ -836,7 +1129,7 @@
         startTracking();
     }
 
-    // --- CONTINUOUS GEOLOCATION TRACKING (omitted for brevity) ---
+    // --- CONTINUOUS GEOLOCATION TRACKING ---
     function startTracking() {
         if (!("geolocation" in navigator)) {
             document.getElementById('status-message').textContent = "Error: Geolocation not supported.";
@@ -854,8 +1147,11 @@
             maximumAge: 5000
         };
 
+        let position; // Declare position in the outer scope for the info card update
+
         watchId = navigator.geolocation.watchPosition(
-            (position) => {
+            (currentPosition) => {
+                position = currentPosition; // Store the latest position
                 const userLat = position.coords.latitude;
                 const userLng = position.coords.longitude;
                 const userCoords = [userLat, userLng];
@@ -875,7 +1171,7 @@
                 } else {
                     userMarker = L.marker(userCoords, {
                         icon: L.divIcon({ className: 'custom-user-marker', iconSize: [40, 40], iconAnchor: [20, 20], html: '<span class="material-symbols-outlined">navigation</span>' })
-                    }).addTo(map).bindPopup("Your Location");
+                    }).addTo(map).bindPopup(DICT[currentLanguage].statusLocating); // Use translated text here
 
                     accuracyCircle = L.circle(userCoords, accuracy, {
                         weight: 1, fillColor: '#4285F4', fillOpacity: 0.1, color: '#4285F4', opacity: 0.5
@@ -895,7 +1191,6 @@
                         if (iconSpan) { iconSpan.style.transform = ''; }
                     }
 
-                    // Only pan if tracking is NOT frozen by a manual drag
                     if (!isTrackingFrozen) {
                         map.panTo(userCoords, { animate: true, duration: 0.5, easeLinearity: 0.1 });
                     }
@@ -904,15 +1199,14 @@
                     if (iconSpan && heading !== null && heading >= 0) { iconSpan.style.transform = `rotate(${heading}deg)`;
                     } else if (iconSpan) { iconSpan.style.transform = ''; }
 
-                    // Update icon if location tracking is active but panning is frozen
                     if (isTrackingFrozen) {
-                         recenterIcon.textContent = 'location_disabled';
+                         recenterIcon.querySelector('span').textContent = 'location_disabled';
                     }
                 }
                 userMarker.update();
 
                 let nearestLimit = null;
-                let nearestTrapName = 'Speed Trap Ahead!';
+                let nearestTrapName = null;
                 let nearbyTraps = [];
 
                 if (geoJsonLayer) {
@@ -923,21 +1217,33 @@
                             ? parseFloat(layer.feature.properties.name)
                             : null;
 
-                        if (speedLimitValue !== null) {
-                            if (distanceKm <= PROXIMITY_RANGE_KM) {
-                                if (nearestLimit === null || distanceKm < PROXIMITY_RANGE_KM) {
-                                    nearestLimit = Math.round(speedLimitValue);
+                        // Retrieve the name/address for display in both alert and list
+                        const description = layer.feature.properties.description || '';
+                        const addressMatch = description.match(/設置地址:\s*([^<]*)/);
+                        // **FIX: Use the extracted address for the name/description**
+                        const trapDisplayName = addressMatch && addressMatch[1] ? addressMatch[1].trim() : DICT[currentLanguage].popupHeader;
 
-                                    const rawDescription = layer.getPopup().getContent();
-                                    const addressMatch = rawDescription.match(/設置地址:\s*([^<]*)/);
-                                    nearestTrapName = addressMatch && addressMatch[1] ? addressMatch[1].trim() : 'Speed Trap Ahead!';
+                        // Only consider traps within proximity range for the main alert
+                        if (distanceKm <= PROXIMITY_RANGE_KM) {
+                            if (nearestTrapName === null || distanceKm < PROXIMITY_RANGE_KM) {
+
+                                // Set nearestLimit based on existence
+                                nearestLimit = speedLimitValue !== null ? Math.round(speedLimitValue) : null;
+
+                                // Set alert name, defaulting to generic translated alert if data is sparse
+                                nearestTrapName = trapDisplayName;
+
+                                if (nearestLimit === null) {
+                                    // Use a more descriptive alert if the limit is missing
+                                    nearestTrapName = DICT[currentLanguage].trapAlertUnknown;
                                 }
                             }
+                        }
 
-                            const rawDescription = layer.getPopup().getContent();
-                            const addressMatch = rawDescription.match(/設置地址:\s*([^<]*)/);
-                            const name = addressMatch && addressMatch[1] ? addressMatch[1].trim() : 'Speed Trap';
-                            nearbyTraps.push({ name, distance: distanceKm, speedLimit: speedLimitValue });
+                        // Add all nearby traps (including those with null speed limit) for the info card list
+                        if (distanceKm <= 5) {
+                            // **FIX: Pass the correctly extracted name to the nearbyTraps array**
+                            nearbyTraps.push({ name: trapDisplayName, distance: distanceKm, speedLimit: speedLimitValue });
                         }
                     });
                 }
@@ -945,6 +1251,7 @@
                 const speedLimitSign = document.getElementById('speed-limit-value');
                 const speedContainer = document.getElementById('current-speed-container');
 
+                // Refined display for the top speed limit sign
                 speedLimitSign.textContent = nearestLimit !== null ? nearestLimit : '--';
                 speedContainer.classList.remove('warning');
 
@@ -954,14 +1261,19 @@
 
                 const drivingAlert = document.getElementById('driving-trap-alert');
 
-                if (isDrivingMode && nearestLimit !== null) {
+                // Refined driving alert logic
+                if (isDrivingMode && nearestTrapName) {
                     drivingAlert.classList.add('visible');
-                    document.getElementById('alert-limit-value').textContent = nearestLimit;
+
+                    // Show '--' if limit is null, otherwise show the limit
+                    document.getElementById('alert-limit-value').textContent = nearestLimit !== null ? nearestLimit : '--';
+
                     document.getElementById('alert-trap-description').textContent = nearestTrapName;
                 } else {
                     drivingAlert.classList.remove('visible');
                 }
 
+                // Info Card Update (Throttled)
                 if (!isDrivingMode && (Date.now() - lastInfoCardUpdate > INFO_CARD_UPDATE_THROTTLE_MS)) {
                     lastInfoCardUpdate = Date.now();
 
@@ -976,13 +1288,14 @@
                         nearbyStatus.style.display = 'none';
                     } else {
                         nearbyStatus.style.display = 'block';
-                        nearbyStatus.textContent = 'No speed traps found within the search range.';
+                        nearbyStatus.textContent = DICT[currentLanguage].statusNoTraps;
                     }
 
                     filteredTraps.slice(0, 10).forEach(trap => {
                         const listItem = document.createElement('li');
-                        const roundedLimit = Math.round(trap.speedLimit);
+                        const roundedLimit = trap.speedLimit !== null ? Math.round(trap.speedLimit) : '--';
                         listItem.className = 'trap-item';
+                        // **FIXED: trap.name now holds the correct location/address**
                         listItem.innerHTML = `
                             <div class="trap-details">
                                 <div class="list-speed-sign">${roundedLimit}</div>
@@ -995,7 +1308,8 @@
                 }
 
                 if (!isDrivingMode) {
-                   document.getElementById('status-message').textContent = `Tracking live. Accuracy: ±${Math.round(accuracy)}m. Found ${totalTrapCount} traps.`;
+                   const acc = Math.round(accuracy);
+                   document.getElementById('status-message').textContent = DICT[currentLanguage].statusTracking.replace('{acc}', acc).replace('{count}', totalTrapCount);
                 }
 
             },
@@ -1003,19 +1317,21 @@
                 const statusMsg = document.getElementById('status-message');
                 console.error("Geolocation Watch Error:", error.message, `(Code: ${error.code})`);
 
-                let userFriendlyMessage = `Error: Tracking failed. (Code: ${error.code})`;
+                let userFriendlyMessage;
 
                 if (error.code === 1) {
-                    userFriendlyMessage = "❌ **Geolocation Denied!** Please enable location services for this app in your device/browser settings.";
+                    userFriendlyMessage = DICT[currentLanguage].locationDenied;
                 } else if (error.code === 2) {
-                    userFriendlyMessage = "⚠️ **Location Unavailable!** Your position could not be determined. Check GPS signal.";
+                    userFriendlyMessage = DICT[currentLanguage].locationUnavailable;
                 } else if (error.code === 3) {
-                    userFriendlyMessage = "⏳ **Location Timeout!** Took too long to get a fix. **Attempting restart...**";
+                    userFriendlyMessage = DICT[currentLanguage].locationTimeout;
                     if (watchId) {
                         navigator.geolocation.clearWatch(watchId);
                         watchId = null;
                         setTimeout(startTracking, 2000);
                     }
+                } else {
+                    userFriendlyMessage = DICT[currentLanguage].locationUnavailable;
                 }
 
                 statusMsg.innerHTML = userFriendlyMessage;
@@ -1027,7 +1343,7 @@
         );
     }
 
-    // --- Utility Functions (omitted for brevity) ---
+    // --- Utility Functions ---
     function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
         const R = 6371;
         const dLat = (lat2 - lat1) * (Math.PI / 180);
@@ -1065,6 +1381,20 @@
     });
     proximitySlider.addEventListener('change', saveSettings);
 
+    // **FIX: Explicitly call translateUI() to update all non-map-related text.**
+    // Language Radio Logic
+    langRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            currentLanguage = e.target.value;
+            // 1. Update all static UI elements (Settings, Titles, Button labels)
+            translateUI();
+            // 2. Reload map data/popups and restart tracking (which updates dynamic status messages)
+            loadGeojsonData();
+            // 3. Save the new setting
+            saveSettings();
+        });
+    });
+
     // Map Theme Radio Logic
     themeRadios.forEach(radio => {
         radio.addEventListener('change', (e) => {
@@ -1078,13 +1408,12 @@
 
 
     // Recenter and Rotation Toggle Logic
-    document.getElementById('recenter-and-rotate-fab').addEventListener('click', () => {
+    recenterIcon.addEventListener('click', () => {
         if (!userMarker) {
             map.setView(map.getCenter(), map.getZoom());
             return;
         }
 
-        // 1. Unfreeze tracking and force pan
         isTrackingFrozen = false;
 
         if (!isDrivingMode) {
@@ -1094,15 +1423,14 @@
         const iconSpan = userMarker ? userMarker._icon.querySelector('span') : null;
 
         if (isHeadingUpMode) {
-            recenterIcon.textContent = 'navigation';
+            recenterIcon.querySelector('span').textContent = 'navigation';
         } else {
-            recenterIcon.textContent = 'my_location';
+            recenterIcon.querySelector('span').textContent = 'my_location';
 
             if (rotationTarget) { rotationTarget.style.transform = ''; }
             if (iconSpan) { iconSpan.style.transform = ''; }
         }
 
-        // Ensure centering on pin with animation
         map.setView(userMarker.getLatLng(), map.getZoom(), { animate: true, duration: 0.5 });
     });
 
@@ -1110,12 +1438,12 @@
     map.on('dragstart', () => {
         if (!isDrivingMode) {
             isTrackingFrozen = true;
-            recenterIcon.textContent = 'location_disabled';
+            recenterIcon.querySelector('span').textContent = 'location_disabled';
         }
     });
 
 
-    // Traffic Overlay Logic (omitted for brevity)
+    // Traffic Overlay Logic
     function closeTrafficView() {
         trafficOverlay.style.display = 'none';
         if (!isDrivingMode) { trafficFab.style.display = 'block'; }
@@ -1132,16 +1460,26 @@
 
     // --- INITIAL STARTUP ---
     document.addEventListener('DOMContentLoaded', () => {
-        // 1. Load User Preferences from cookies
+        // 1. Load User Preferences (and initialize language/theme by calling translateUI())
         loadSettings();
 
         // 2. Initialize Map Structure
-        initializeMapTheme();
         initializeRotationTarget();
 
-        // 3. Invalidate map size and load data
-        map.invalidateSize();
+        // 3. Load Trap Data (and starts tracking)
         loadGeojsonData();
+
+        // 4. Splash Screen Logic
+        const splashScreen = document.getElementById('splash-screen');
+        setTimeout(() => {
+            splashScreen.classList.add('fade-out');
+
+            splashScreen.addEventListener('transitionend', () => {
+                splashScreen.remove();
+                map.invalidateSize();
+            }, { once: true });
+
+        }, 1500);
     });
 
     // --- ANDROID NATIVE COMMUNICATION (For backward compatibility) ---
