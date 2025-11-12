@@ -11,7 +11,7 @@
 
     <style>
         /* ================================================= */
-        /* 1. Global & Variables                             */
+        /* 1. Global & Variables (Material 3)                */
         /* ================================================= */
         html, body {
             height: 100%;
@@ -27,43 +27,49 @@
             box-sizing: inherit;
         }
 
+        /* DEFAULT: Dark Theme Variables (Material 3) */
         :root {
-            /* Dark Theme Colors */
             --md-sys-color-primary: #D0BCFF;
             --md-sys-color-on-primary: #381E72;
             --md-sys-color-error: #F2B8B5;
             --md-sys-color-on-error: #601410;
-            --md-sys-color-error-rgb: 179, 38, 30;
+            --md-sys-color-error-rgb: 242, 184, 181;
             --md-sys-color-background: #1C1B1F;
             --md-sys-color-on-background: #E6E0E9;
             --md-sys-color-surface: #1C1B1F;
             --md-sys-color-on-surface: #E6E0E9;
             --md-sys-color-surface-container-high: #36343B;
+            --md-sys-color-surface-container-low: #28272C;
+            --md-sys-color-on-surface-variant: #CAC4D0;
+            --md-sys-color-outline: #938F99;
             --md-sys-color-red-sign: #B3261E;
         }
 
-        @media (prefers-color-scheme: light) {
-            /* Light Theme Overrides */
-            :root {
-                --md-sys-color-primary: #6750A4;
-                --md-sys-color-on-primary: #FFFFFF;
-                --md-sys-color-error: #B3261E;
-                --md-sys-color-on-error: #FFFFFF;
-                --md-sys-color-background: #FFFBFE;
-                --md-sys-color-on-background: #1C1B1F;
-                --md-sys-color-surface: #FFFBFE;
-                --md-sys-color-on-surface: #1C1B1F;
-                --md-sys-color-surface-container-high: #E6E0EE;
-            }
+        /* LIGHT MODE OVERRIDE: Applied when body has the class (Material 3) */
+        .light-mode-ui {
+            --md-sys-color-primary: #6750A4;
+            --md-sys-color-on-primary: #FFFFFF;
+            --md-sys-color-error: #B3261E;
+            --md-sys-color-on-error: #FFFFFF;
+            --md-sys-color-error-rgb: 179, 38, 30;
+            --md-sys-color-background: #FFFBFE;
+            --md-sys-color-on-background: #1C1B1F;
+            --md-sys-color-surface: #FFFBFE;
+            --md-sys-color-on-surface: #1C1B1F;
+            --md-sys-color-surface-container-high: #E6E0EE;
+            --md-sys-color-surface-container-low: #F7F2FA;
+            --md-sys-color-on-surface-variant: #49454F;
+            --md-sys-color-outline: #79747E;
         }
 
         body {
             background-color: var(--md-sys-color-background);
             color: var(--md-sys-color-on-background);
+            transition: background-color 0.3s;
         }
 
         /* ================================================= */
-        /* 2. Layouts (Default - Browsing Mode)              */
+        /* 2. Layouts & Components                           */
         /* ================================================= */
         #map-container {
             position: relative;
@@ -72,52 +78,140 @@
             display: block;
         }
 
-        /* ADD TRANSITION for controls */
+        /* Top Bar - Floating Block */
         #top-control-panel {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 600px;
+            width: calc(100% - 32px);
+            border-radius: 16px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+
             z-index: 1000;
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 10px 16px;
             background-color: var(--md-sys-color-surface-container-high);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
             color: var(--md-sys-color-on-surface);
             gap: 10px;
-            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            transition: all 0.3s ease;
         }
 
-        /* ADD TRANSITION for map and FABs */
         #mapid {
             height: 100%;
             width: 100%;
             z-index: 0;
-            transition: opacity 0.3s ease-in-out;
         }
 
+        /* FAB Container Styling - FLOATING CARD */
         .fab-container {
             position: fixed;
-            bottom: 50%;
+            top: 50%; /* Center vertically */
+            transform: translateY(-50%); /* Adjust for vertical centering */
             right: 16px;
+
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 16px; /* INCREASED GAP */
+            padding: 8px;
+            background-color: var(--md-sys-color-surface-container-high);
+            border-radius: 16px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
             z-index: 1001;
-            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
         }
 
-        /* Speed Dashboard - Browsing Mode */
+        /* Driving Mode Overrides (omitted for brevity) */
+        .driving-mode-active #map-container {
+            display: flex;
+            flex-direction: column;
+        }
+        .driving-mode-active #top-control-panel {
+            position: static;
+            height: 35vh;
+            display: grid;
+            transform: none;
+            max-width: none;
+            width: 100%;
+            border-radius: 0;
+            box-shadow: none;
+            grid-template-columns: auto 1fr auto;
+            grid-template-rows: auto 1fr;
+            gap: 10px;
+            padding: 16px;
+        }
+        .driving-mode-active #mapid { height: auto; flex-grow: 1; }
+
+        /* Hide non-driving elements */
+        .driving-mode-active #info-card,
+        .driving-mode-active .fab-container,
+        .driving-mode-active #driving-mode-button,
+        .driving-mode-active #zoom-controls,
+        .driving-mode-active #settings-button {
+            display: none !important;
+        }
+
+        /* Driving Mode Specific Elements (omitted for brevity) */
+        #exit-driving-mode-button { display: none; }
+        .driving-mode-active #exit-driving-mode-button {
+            display: block;
+            grid-column: 1 / 2;
+            grid-row: 1 / 2;
+            align-self: flex-start;
+        }
+        .driving-mode-active #speed-dashboard {
+            grid-column: 2 / 3;
+            grid-row: 1 / 2;
+            justify-content: center;
+        }
+        #driving-trap-alert {
+            display: none;
+            grid-column: 1 / 4;
+            grid-row: 2 / 3;
+            align-self: center;
+            justify-self: center;
+            margin: 0;
+            padding: 16px 24px;
+            border-radius: 28px;
+            background-color: rgba(var(--md-sys-color-error-rgb), 0.95);
+            color: var(--md-sys-color-on-error);
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+            max-width: 90%;
+            min-width: 200px;
+        }
+        #driving-trap-alert.visible {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Map Rotation (omitted for brevity) */
+        .leaflet-map-pane, .leaflet-tile-pane, .leaflet-overlay-pane,
+        .leaflet-marker-pane, .leaflet-shadow-pane {
+            transition: transform 0.5s linear;
+            transform-origin: 50% 50%;
+        }
+
+        /* Custom User Marker (omitted for brevity) */
+        .custom-user-marker { display: flex; justify-content: center; align-items: center; width: 40px !important; height: 40px !important; border-radius: 50%; background-color: #4285F4; border: 4px solid #FFFFFF; box-shadow: 0 2px 6px rgba(0,0,0,0.6); z-index: 1000; }
+        .custom-user-marker span { color: #FFFFFF; font-size: 28px !important; transition: transform 0.2s linear; }
+
+        /* Traffic Overlay (omitted for brevity) */
+        #traffic-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2000; background-color: var(--md-sys-color-surface-container-high); display: none; }
+        #traffic-iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; z-index: 2000; }
+        #close-traffic { position: absolute; top: 16px; left: 16px; z-index: 2001; --md-icon-button-icon-color: var(--md-sys-color-on-surface); --md-icon-button-container-color: rgba(255, 255, 255, 0.9); border-radius: 50%; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); }
+
+        /* Speed Dashboard (omitted for brevity) */
         #speed-dashboard {
-            flex-grow: 1;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 20px;
         }
-
         #speed-limit-sign {
             width: 70px;
             height: 70px;
@@ -132,7 +226,6 @@
             font-size: 1.8em;
             font-weight: 900;
         }
-
         #current-speed-container {
             padding: 8px 16px;
             border-radius: 28px;
@@ -147,7 +240,10 @@
             line-height: 1;
             transition: background-color 0.3s;
         }
-
+        #current-speed-container.warning {
+            background-color: var(--md-sys-color-error);
+            color: var(--md-sys-color-on-error);
+        }
         #current-speed-container #speed-unit {
             font-size: 0.3em;
             font-weight: 500;
@@ -157,277 +253,14 @@
             padding-bottom: 5px;
         }
 
-
-        #current-speed-container.warning {
-            background-color: var(--md-sys-color-error);
-            color: var(--md-sys-color-on-error);
-        }
-
-        /* Alert is placed in the top-bar but kept hidden in browsing mode */
-        #driving-trap-alert {
-            display: none !important;
-        }
-
-
-        /* ================================================= */
-        /* 3. Driving Mode Overrides (Mapless HUD)           */
-        /* ================================================= */
-
-        /* 3.1 Hide non-HUD elements using opacity/visibility for transition */
-        .driving-mode-active #mapid,
-        .driving-mode-active #info-card,
-        .driving-mode-active #top-control-panel,
-        .driving-mode-active #zoom-controls,
-        .driving-mode-active .fab-container {
-            opacity: 0 !important;
-            visibility: hidden !important;
-            pointer-events: none !important;
-            height: 0 !important; /* Ensure they collapse/don't take space */
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-
-        /* Elements to stay hidden in HUD mode (no transition needed) */
-        .driving-mode-active #driving-mode-button,
-        .driving-mode-active #traffic-overlay,
-        .driving-mode-active #speed-dashboard,
-        .driving-mode-active #driving-trap-alert {
-            display: none !important;
-        }
-
-        /* 3.2 Mapless HUD Container */
-        #mapless-hud {
-            display: flex; /* Keep display: flex for layout calculation */
-            opacity: 0;
-            visibility: hidden;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            width: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 100;
-            background-color: var(--md-sys-color-background);
-            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
-        }
-
-        .driving-mode-active #mapless-hud {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        /* 3.3 HUD Component Sizing */
-        #speed-dashboard-hud {
-             display: flex;
-             flex-direction: column;
-             align-items: center;
-             justify-content: center;
-        }
-
-        #speed-limit-sign-hud {
-            width: 30vw;
-            height: 30vw;
-            border-width: 10px;
-            font-size: 10vw;
-            margin-bottom: 20px;
-            border-radius: 50%;
-            background-color: var(--md-sys-color-surface);
-            border: 6px solid var(--md-sys-color-red-sign);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-shrink: 0;
-            color: var(--md-sys-color-on-surface);
-            font-weight: 900;
-        }
-
-        #current-speed-container-hud {
-            font-size: 18vw;
-            padding: 3vw 6vw;
-            line-height: 1.1;
-            border-radius: 28px;
-            background-color: var(--md-sys-color-primary);
-            color: var(--md-sys-color-on-primary);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: baseline;
-            gap: 8px;
-            font-weight: 700;
-            transition: background-color 0.3s;
-        }
-
-        #current-speed-container-hud.warning {
-            background-color: var(--md-sys-color-error);
-            color: var(--md-sys-color-on-error);
-        }
-
-        #current-speed-container-hud #speed-unit-hud {
-            font-size: 0.3em;
-            font-weight: 500;
-            opacity: 1;
-            align-self: flex-end;
-            color: inherit;
-            padding-bottom: 5px;
-        }
-
-        /* 3.4 HUD Alert & Log (Styles Preserved) */
-        #driving-trap-alert-hud {
-            display: none;
-            position: absolute;
-            top: 5vh;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10;
-            padding: 20px 30px;
-            border-radius: 28px;
-            background-color: rgba(var(--md-sys-color-error-rgb), 0.95);
-            color: var(--md-sys-color-on-error);
-            text-align: center;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
-            max-width: 90%;
-            transition: opacity 0.3s ease-in-out;
-        }
-
-        #driving-trap-alert-hud.visible {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #driving-trap-alert-hud .alert-limit {
-            font-size: 4em;
-            font-weight: 900;
-            line-height: 1;
-            margin-bottom: 5px;
-        }
-
-        #driving-trap-alert-hud .alert-description {
-            font-size: 1.2em;
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        #speeding-log-container {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--md-sys-color-on-background);
-            font-size: 1.2em;
-            font-weight: 500;
-            padding: 8px 16px;
-            border-radius: 24px;
-            background-color: var(--md-sys-color-surface-container-high);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            z-index: 10;
-        }
-
-        #speeding-trap-count {
-            font-size: 1.5em;
-            font-weight: 700;
-            color: var(--md-sys-color-primary);
-        }
-
-        /* 3.5 Exit Button */
-        #exit-driving-mode-button {
-             display: none;
-        }
-
-        /* OVERRIDE: Reposition for HUD mode */
-        .driving-mode-active #exit-driving-mode-button {
-            display: block !important;
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 101;
-            --md-icon-button-icon-color: var(--md-sys-color-on-surface);
-            --md-icon-button-container-color: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-        }
-
-        /* Ensure the driving mode button shows in the top bar in normal mode */
-        #driving-mode-button {
-             order: -1;
-        }
-
-        /* ================================================= */
-        /* 4. Component Styling (Map, Info, Traffic)         */
-        /* ================================================= */
-
-        /* Map Rotation */
-        .leaflet-map-pane, .leaflet-tile-pane, .leaflet-overlay-pane,
-        .leaflet-marker-pane, .leaflet-shadow-pane {
-            transition: transform 0.5s linear;
-            transform-origin: 50% 50%;
-        }
-
-        /* Custom User Marker Style for Rotation and Visibility */
-        .custom-user-marker {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 40px !important;
-            height: 40px !important;
-            border-radius: 50%;
-            background-color: #4285F4;
-            border: 4px solid #FFFFFF;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.6);
-            z-index: 1000;
-        }
-
-        .custom-user-marker span {
-            color: #FFFFFF;
-            font-size: 28px !important;
-            transition: transform 0.2s linear;
-        }
-
-        /* Traffic Overlay FIX: Ensure it is hidden by default */
-        #traffic-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 2000;
-            background-color: var(--md-sys-color-surface-container-high);
-            display: none;
-        }
-
-        #traffic-iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
-            z-index: 2000;
-        }
-
-        #close-traffic {
-            position: absolute;
-            top: 16px;
-            left: 16px;
-            z-index: 2001;
-            --md-icon-button-icon-color: var(--md-sys-color-on-surface);
-            --md-icon-button-container-color: rgba(255, 255, 255, 0.9);
-            border-radius: 50%;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-        }
-
-        /* Info Card Header/Collapse Bar */
+        /* INFO CARD STYLES - CENTERED AND NARROWER */
         #info-card {
             position: fixed;
             bottom: 0;
-            left: 0;
-            width: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(0);
+            max-width: 600px;
+            width: calc(100% - 32px);
             max-height: 40%;
             margin: 0;
             padding: 0;
@@ -436,161 +269,148 @@
             box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.4);
             z-index: 1002;
             overflow-y: auto;
-            transform: translateY(0);
-            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            transition: transform 0.3s ease-in-out;
         }
 
         #info-card.collapsed {
-            transform: translateY(calc(100% - 48px));
+            transform: translateX(-50%) translateY(calc(100% - 48px));
         }
 
+        /* Internal padding matches floating card edge (16px) */
         #info-card-header {
             padding: 16px 16px 8px 16px;
-            text-align: center;
-            cursor: pointer;
-            border-radius: 28px 28px 0 0;
-            background-color: var(--md-sys-color-surface-container-high);
-            position: sticky;
-            top: 0;
-            z-index: 1003;
+            text-align: center; cursor: pointer; border-radius: 28px 28px 0 0; background-color: var(--md-sys-color-surface-container-high); position: sticky; top: 0; z-index: 1003;
         }
 
-        #drag-handle {
-            height: 4px;
-            width: 40px;
-            background-color: var(--md-sys-color-on-surface-variant);
-            opacity: 0.3;
-            margin: 0 auto 8px auto;
-            border-radius: 2px;
-        }
+        #drag-handle { height: 4px; width: 40px; background-color: var(--md-sys-color-on-surface-variant); opacity: 0.3; margin: 0 auto 8px auto; border-radius: 2px; }
 
         #trap-list-container {
             padding: 0 16px 16px 16px;
         }
 
-        .trap-item {
-            padding: 10px 0;
-            border-bottom: 1px solid var(--md-sys-color-surface);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .trap-item:last-child {
-            border-bottom: none;
-        }
-
-        .trap-details {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-grow: 1;
-            overflow: hidden;
-        }
-
-        .trap-name {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            font-size: 1.1em;
-        }
-
-        .distance {
-            font-weight: 500;
-            color: var(--md-sys-color-primary);
-            flex-shrink: 0;
-        }
-
-        /* Speed limit in the list */
-        .list-speed-sign {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: var(--md-sys-color-surface);
-            border: 4px solid var(--md-sys-color-red-sign);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-shrink: 0;
-            color: var(--md-sys-color-on-surface);
-            font-size: 1em;
-            font-weight: 900;
-        }
+        .trap-item { padding: 10px 0; border-bottom: 1px solid var(--md-sys-color-surface); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .trap-item:last-child { border-bottom: none; }
+        .trap-details { display: flex; align-items: center; gap: 12px; flex-grow: 1; overflow: hidden; }
+        .trap-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 1.1em; }
+        .distance { font-weight: 500; color: var(--md-sys-color-primary); flex-shrink: 0; }
+        .list-speed-sign { width: 40px; height: 40px; border-radius: 50%; background-color: var(--md-sys-color-surface); border: 4px solid var(--md-sys-color-red-sign); display: flex; justify-content: center; align-items: center; flex-shrink: 0; color: var(--md-sys-color-on-surface); font-size: 1em; font-weight: 900; }
 
         /* ================================================= */
-        /* 5. Splash Screen Styles                           */
+        /* 5. Settings Panel Styling (omitted for brevity)   */
         /* ================================================= */
-        #splash-screen {
+        #settings-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: var(--md-sys-color-background);
             z-index: 3000;
+            background-color: var(--md-sys-color-surface);
+            transform: translateX(100%);
+            transition: transform 0.3s ease-out;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            color: var(--md-sys-color-on-surface);
+        }
+
+        #settings-overlay.visible {
+            transform: translateX(0);
+        }
+
+        #settings-header {
+            display: flex;
             align-items: center;
-            gap: 20px;
-            transition: opacity 0.5s ease-out;
+            padding: 16px;
+            background-color: var(--md-sys-color-surface-container-high);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
-        #splash-screen.fade-out {
-            opacity: 0;
-        }
-
-        #splash-logo {
-            font-size: 4em;
-            color: var(--md-sys-color-primary);
-            animation: pulse 1.5s infinite alternate;
-        }
-
-        #splash-text {
-            color: var(--md-sys-color-on-background);
-            font-size: 1.5em;
+        #settings-header h3 {
+            flex-grow: 1;
+            margin: 0;
+            text-align: center;
+            padding-right: 48px;
             font-weight: 500;
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.8; }
-            100% { transform: scale(1.1); opacity: 1; }
+        #settings-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .setting-item {
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            border-bottom: 1px solid var(--md-sys-color-surface-container-low);
+            transition: background-color 0.15s ease-in-out;
+        }
+
+        .setting-item:hover {
+            background-color: rgba(var(--md-sys-color-on-surface-rgb), 0.04);
+        }
+
+        .setting-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1em;
+            font-weight: 400;
+        }
+
+        .setting-item-description {
+            font-size: 0.85em;
+            color: var(--md-sys-color-on-surface-variant);
+            margin-top: 4px;
+        }
+
+        .setting-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        /* Radio button styling for themes */
+        .theme-radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .theme-radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9em;
+        }
+
+        /* Proximity Range Slider */
+        #proximity-range-slider {
+            width: 100%;
+            accent-color: var(--md-sys-color-primary);
+        }
+
+        /* Simple Checkbox Styling */
+        #global-dark-mode-switch {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--md-sys-color-primary);
         }
     </style>
 </head>
 <body>
-<div id="splash-screen">
-    <span id="splash-logo" class="material-symbols-outlined">navigation</span>
-    <div id="splash-text">Loading Radar Map...</div>
-</div>
 <div id="map-container">
 
-    <div id="mapless-hud">
-
-        <div id="speed-dashboard-hud">
-            <div id="speed-limit-sign-hud">
-                <span id="speed-limit-value-hud">--</span>
-            </div>
-            <div id="current-speed-container-hud">
-                <span id="current-speed-value-hud">--</span>
-                <span id="speed-unit-hud">km/h</span>
-            </div>
-        </div>
-
-        <div id="driving-trap-alert-hud">
-            <div class="alert-limit"><span id="alert-limit-value-hud">--</span> km/h</div>
-            <div class="alert-description" id="alert-trap-description-hud">Speed Trap Ahead!</div>
-        </div>
-
-        <div id="speeding-log-container">
-            <span class="material-symbols-outlined">priority_high</span>
-            <span id="speeding-trap-count">0</span>
-            <span style="font-size: 0.8em;">Speeding Traps Logged</span>
-        </div>
-    </div>
-
     <div id="top-control-panel">
+
+        <md-icon-button id="exit-driving-mode-button" aria-label="Exit Driving Mode">
+            <span class="material-symbols-outlined">close</span>
+        </md-icon-button>
 
         <md-icon-button id="driving-mode-button" aria-label="Toggle Driving Mode">
             <span class="material-symbols-outlined">drive_eta</span>
@@ -607,7 +427,10 @@
             </div>
         </div>
 
-        <div id="zoom-controls">
+        <div style="display: flex; gap: 8px;" id="zoom-controls">
+            <md-icon-button id="settings-button" aria-label="Settings">
+                <span class="material-symbols-outlined">settings</span>
+            </md-icon-button>
             <md-icon-button id="zoom-in-button" aria-label="Zoom In">
                 <span class="material-symbols-outlined">add</span>
             </md-icon-button>
@@ -620,11 +443,8 @@
             <div class="alert-limit"><span id="alert-limit-value">--</span> km/h</div>
             <div class="alert-description" id="alert-trap-description">Speed Trap Ahead!</div>
         </div>
-    </div>
 
-    <md-icon-button id="exit-driving-mode-button" aria-label="Exit Driving Mode">
-        <span class="material-symbols-outlined">close</span>
-    </md-icon-button>
+    </div>
 
     <div id="mapid"></div>
 
@@ -638,13 +458,74 @@
         </iframe>
     </div>
 
+    <div id="settings-overlay">
+        <div id="settings-header">
+            <md-icon-button id="close-settings" aria-label="Close Settings">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </md-icon-button>
+            <h3>Settings</h3>
+        </div>
+
+        <ul id="settings-list">
+
+            <li class="setting-item" style="cursor: default;">
+                <div class="setting-item-header">
+                    <span>Dark UI Mode</span>
+                    <input type="checkbox" id="global-dark-mode-switch" aria-label="Toggle Dark UI Mode">
+                </div>
+                <div class="setting-item-description">
+                    Switch the entire app interface between light and dark themes.
+                </div>
+            </li>
+
+            <li class="setting-item">
+                <div class="setting-item-header">
+                    <span>Alert Proximity</span>
+                    <span id="proximity-range-display">500 m</span>
+                </div>
+                <div class="setting-item-description">
+                    Distance before a trap to trigger a warning.
+                </div>
+                <div class="setting-controls">
+                    <input type="range" id="proximity-range-slider" min="0.1" max="2.0" step="0.1" value="0.5">
+                </div>
+            </li>
+
+            <li class="setting-item">
+                <div class="setting-item-header">
+                    <span>Map Tile Theme</span>
+                </div>
+                <div class="setting-item-description">
+                    Choose the visual style for the map tiles (separate from UI theme).
+                </div>
+                <div class="theme-radio-group">
+                    <label>
+                        <input type="radio" name="map-theme" id="theme-light" value="light"> Light
+                    </label>
+                    <label>
+                        <input type="radio" name="map-theme" id="theme-dark" value="dark"> Dark
+                    </label>
+                </div>
+            </li>
+
+            <li class="setting-item">
+                <div class="setting-item-header">
+                    <span>About This App</span>
+                </div>
+                <div class="setting-item-description">
+                    Version 1.3.0. Data from open sources.
+                </div>
+            </li>
+
+        </ul>
+    </div>
     <div id="info-card">
         <div id="info-card-header" onclick="toggleCard()">
             <div id="drag-handle"></div>
             <h4 style="margin: 0; color: var(--md-sys-color-on-surface-variant);">Nearby Speed Traps (<span id="trap-count">0</span> Total)</h4>
         </div>
         <div id="trap-list-container">
-            <p id="status-message" style="text-align: center; color: var(--md-sys-color-secondary); margin-top: 10px;">Locating you...</p>
+            <p id="status-message" style="text-align: center; color: var(--md-sys-color-on-surface-variant); margin-top: 10px;">Locating you...</p>
             <ul id="trap-list" style="list-style: none; padding: 0; margin-top: 10px;">
             </ul>
         </div>
@@ -667,13 +548,36 @@
 </div>
 
 <script>
+    // --- COOKIE UTILITY FUNCTIONS (omitted for brevity) ---
+    function setCookie(name, value, days) {
+        let expires = "";
+        if (days) {
+            const date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + (value || "") + expires + "; path=/; SameSite=Lax";
+    }
+
+    function getCookie(name) {
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(';');
+        for(let i=0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
+
     // --- CONSTANTS ---
     const initialCoords = [23.6, 120.9];
-    const PROXIMITY_RANGE_KM = 0.5; // 500 meters for alerts
-    const LIST_RANGE_KM = 5; // 5 km for the bottom list
+    let PROXIMITY_RANGE_KM = 0.5; // Default 500 meters
     const DEFAULT_ZOOM = 14;
     const DRIVING_MODE_ZOOM = 17;
+    const INFO_CARD_UPDATE_THROTTLE_MS = 5000;
 
+    // Map Tile URL Definitions
     const MAP_THEMES = {
         LIGHT: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
         DARK: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
@@ -687,66 +591,127 @@
     let currentTileLayer = null;
     let totalTrapCount = 0;
 
+    // State Variables
+    let isUIDarkMode = false;
     let isLightMode = true;
     let isDrivingMode = false;
     let isHeadingUpMode = false;
     let watchId = null;
     let rotationTarget;
+    let lastInfoCardUpdate = 0;
+    let isTrackingFrozen = false;
 
-    // Speeding Log State
-    let speedingTrapsCount = 0;
-    let lastPassedSpeedTrapId = null;
-
-    // DOM References
+    // DOM elements (omitted for brevity)
     const trafficOverlay = document.getElementById('traffic-overlay');
     const trafficFab = document.getElementById('traffic-fab');
     const recenterIcon = document.getElementById('recenter-icon');
     const closeTrafficButton = document.getElementById('close-traffic');
-    const maplessHud = document.getElementById('mapless-hud');
-    const speedLimitValueHud = document.getElementById('speed-limit-value-hud');
-    const currentSpeedValueHud = document.getElementById('current-speed-value-hud');
-    const drivingAlertHud = document.getElementById('driving-trap-alert-hud');
-    const speedingLogCountElement = document.getElementById('speeding-trap-count');
-    const drivingModeButton = document.getElementById('driving-mode-button');
-    const exitDrivingModeButton = document.getElementById('exit-driving-mode-button');
-    const speedContainerHud = document.getElementById('current-speed-container-hud');
+    const mapThemeIcon = document.getElementById('map-theme-toggle');
+    const settingsOverlay = document.getElementById('settings-overlay');
+    const proximitySlider = document.getElementById('proximity-range-slider');
+    const proximityDisplay = document.getElementById('proximity-range-display');
+    const themeRadios = document.querySelectorAll('input[name="map-theme"]');
+    const globalDarkModeSwitch = document.getElementById('global-dark-mode-switch');
 
 
-    // Initial map theme setup
+    // --- SETTINGS LOGIC (omitted for brevity) ---
+    function loadSettings() {
+        const proximity = getCookie('proximityRange');
+        const mapTheme = getCookie('mapTheme');
+        const uiTheme = getCookie('uiTheme');
+
+        // 1. UI Theme
+        if (uiTheme === 'dark') {
+            isUIDarkMode = true;
+            document.body.classList.remove('light-mode-ui');
+            globalDarkModeSwitch.checked = true;
+        } else if (uiTheme === 'light') {
+            isUIDarkMode = false;
+            document.body.classList.add('light-mode-ui');
+            globalDarkModeSwitch.checked = false;
+        } else {
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            isUIDarkMode = prefersDark;
+            globalDarkModeSwitch.checked = prefersDark;
+            if (!prefersDark) {
+                document.body.classList.add('light-mode-ui');
+            }
+        }
+
+        // 2. Proximity
+        if (proximity) {
+            PROXIMITY_RANGE_KM = parseFloat(proximity);
+            proximitySlider.value = PROXIMITY_RANGE_KM;
+            updateProximityDisplay(PROXIMITY_RANGE_KM);
+        } else {
+            updateProximityDisplay(PROXIMITY_RANGE_KM);
+        }
+
+        // 3. Map Theme
+        if (mapTheme) {
+            if (mapTheme === 'dark') {
+                isLightMode = false;
+                document.getElementById('theme-dark').checked = true;
+            } else {
+                isLightMode = true;
+                document.getElementById('theme-light').checked = true;
+            }
+        }
+    }
+
+    function saveSettings() {
+        setCookie('proximityRange', PROXIMITY_RANGE_KM.toFixed(1), 365);
+        setCookie('mapTheme', isLightMode ? 'light' : 'dark', 365);
+        setCookie('uiTheme', isUIDarkMode ? 'dark' : 'light', 365);
+    }
+
+    function updateProximityDisplay(km) {
+        proximityDisplay.textContent = km >= 1 ? `${km.toFixed(1)} km` : `${Math.round(km * 1000)} m`;
+    }
+
+    function toggleUIDarkMode() {
+        isUIDarkMode = globalDarkModeSwitch.checked;
+
+        if (isUIDarkMode) {
+            document.body.classList.remove('light-mode-ui');
+        } else {
+            document.body.classList.add('light-mode-ui');
+        }
+        saveSettings();
+    }
+
+
+    // --- MAP THEME (omitted for brevity) ---
+
     function initializeMapTheme() {
-        currentTileLayer = L.tileLayer(MAP_THEMES.LIGHT, {
+        const themeUrl = isLightMode ? MAP_THEMES.LIGHT : MAP_THEMES.DARK;
+        currentTileLayer = L.tileLayer(themeUrl, {
             maxZoom: 19,
             attribution: '© CartoDB, © OpenStreetMap'
         }).addTo(map);
-        isLightMode = true;
-        document.getElementById('map-theme-icon').textContent = 'dark_mode';
+        mapThemeIcon.querySelector('span').textContent = isLightMode ? 'dark_mode' : 'light_mode';
     }
 
-    // --- MAP THEME TOGGLE FUNCTION ---
     function toggleMapTheme() {
+        isLightMode = !isLightMode;
         if (currentTileLayer) {
             map.removeLayer(currentTileLayer);
         }
 
-        if (isLightMode) {
-            currentTileLayer = L.tileLayer(MAP_THEMES.DARK, {
-                maxZoom: 19,
-                attribution: '© CartoDB, © OpenStreetMap'
-            }).addTo(map);
-            isLightMode = false;
-            document.getElementById('map-theme-icon').textContent = 'light_mode';
-        } else {
-            currentTileLayer = L.tileLayer(MAP_THEMES.LIGHT, {
-                maxZoom: 19,
-                attribution: '© CartoDB, © OpenStreetMap'
-            }).addTo(map);
-            isLightMode = true;
-            document.getElementById('map-theme-icon').textContent = 'dark_mode';
-        }
+        const themeUrl = isLightMode ? MAP_THEMES.LIGHT : MAP_THEMES.DARK;
+        currentTileLayer = L.tileLayer(themeUrl, {
+            maxZoom: 19,
+            attribution: '© CartoDB, © OpenStreetMap'
+        }).addTo(map);
+
+        mapThemeIcon.querySelector('span').textContent = isLightMode ? 'dark_mode' : 'light_mode';
+
+        document.getElementById(isLightMode ? 'theme-light' : 'theme-dark').checked = true;
+        saveSettings();
     }
 
 
-    // --- ROTATION UTILITY ---
+    // --- ROTATION UTILITY (omitted for brevity) ---
 
     function initializeRotationTarget() {
         const mapPane = map.getPane('mapPane');
@@ -760,7 +725,6 @@
     function rotateMap(heading) {
         if (!rotationTarget || heading === null) return;
         const rotationAngle = -heading;
-        // Apply rotation to the entire map pane
         rotationTarget.style.transform = `rotate(${rotationAngle}deg)`;
     }
 
@@ -769,61 +733,52 @@
     function zoomIn() { map.zoomIn(1); }
     function zoomOut() { map.zoomOut(1); }
 
+    function showSettings() { settingsOverlay.classList.add('visible'); }
+    function hideSettings() { settingsOverlay.classList.remove('visible'); }
+
     function toggleDrivingMode() {
         isDrivingMode = !isDrivingMode;
         const body = document.body;
+        const mapContainer = document.getElementById('map-container');
 
         if (isDrivingMode) {
             body.classList.add('driving-mode-active');
-
+            mapContainer.classList.add('driving-mode-active');
             isHeadingUpMode = true;
-            recenterIcon.textContent = 'navigation'; // Set to navigation icon
-            trafficOverlay.style.display = 'none'; // Hide traffic overlay
+            isTrackingFrozen = false;
+            recenterIcon.textContent = 'navigation';
+            trafficOverlay.style.display = 'none';
 
-            // Show the HUD exit button
-            exitDrivingModeButton.style.display = 'block';
-
-            // Disable map interactions
             map.dragging.disable();
             map.touchZoom.disable();
             map.doubleClickZoom.disable();
             map.scrollWheelZoom.disable();
 
             if (userMarker) {
-                 map.setView(userMarker.getLatLng(), DRIVING_MODE_ZOOM);
+                 map.setView(userMarker.getLatLng(), DRIVING_MODE_ZOOM, { animate: true, duration: 0.5 });
             }
-
-            speedingLogCountElement.textContent = speedingTrapsCount;
-
         } else {
             body.classList.remove('driving-mode-active');
-
-            // Hide the HUD exit button
-            exitDrivingModeButton.style.display = 'none';
-
+            mapContainer.classList.remove('driving-mode-active');
             isHeadingUpMode = false;
-            recenterIcon.textContent = 'my_location'; // Revert icon
+            isTrackingFrozen = false;
+            recenterIcon.textContent = 'my_location';
 
-            if (rotationTarget) {
-                rotationTarget.style.transform = '';
-            }
+            if (rotationTarget) { rotationTarget.style.transform = ''; }
             const iconSpan = userMarker ? userMarker._icon.querySelector('span') : null;
-            if (iconSpan) {
-                iconSpan.style.transform = '';
-            }
+            if (iconSpan) { iconSpan.style.transform = ''; }
 
-            drivingAlertHud.classList.remove('visible');
+            document.getElementById('driving-trap-alert').classList.remove('visible');
 
-            // Re-enable controls
             map.dragging.enable();
             map.touchZoom.enable();
             map.doubleClickZoom.enable();
             map.scrollWheelZoom.enable();
 
-            map.setView(map.getCenter(), DEFAULT_ZOOM);
+            const center = userMarker ? userMarker.getLatLng() : map.getCenter();
+            map.setView(center, DEFAULT_ZOOM, { animate: true, duration: 0.5 });
         }
 
-        // Delay invalidation to allow CSS transitions to complete
         setTimeout(() => {
             map.invalidateSize();
             if (userMarker) {
@@ -832,11 +787,10 @@
         }, 350);
     }
 
-    // --- GEOJSON LOADING FUNCTION ---
-
+    // --- GEOJSON LOADING FUNCTION (omitted for brevity) ---
     function loadGeojsonData() {
         const statusMsg = document.getElementById('status-message');
-        statusMsg.textContent = "Loading speed trap data...";
+        let finalStatus = "Locating you...";
 
         try {
             if (typeof Android !== 'undefined' && Android.getGeoJsonData) {
@@ -866,25 +820,23 @@
                     totalTrapCount = data.features.length;
                     document.getElementById('trap-count').textContent = totalTrapCount;
 
-                    statusMsg.textContent = `Loaded ${totalTrapCount} speed traps. Starting location tracking...`;
-                    startTracking();
+                    finalStatus = `Loaded ${totalTrapCount} speed traps. Starting location tracking...`;
                 } else {
-                    statusMsg.textContent = "Error: Android bridge returned empty data. Starting tracking without trap data.";
-                    startTracking();
+                    finalStatus = "Error: Could not load GeoJSON data from Android. Starting location tracking without trap data.";
                 }
             } else {
-                 statusMsg.textContent = "Error: Android bridge not found. Starting tracking without trap data.";
-                 startTracking();
+                 finalStatus = "Error: Android bridge is unavailable. Starting location tracking without trap data.";
             }
         } catch (e) {
-            statusMsg.textContent = `Error: Failed to process GeoJSON. ${e.message}. Starting tracking without trap data.`;
+            finalStatus = `Error: Failed to process GeoJSON (${e.message}). Starting location tracking...`;
             console.error("JSON/Load Error:", e);
-            startTracking();
         }
+
+        statusMsg.textContent = finalStatus;
+        startTracking();
     }
 
-    // --- CONTINUOUS GEOLOCATION TRACKING ---
-
+    // --- CONTINUOUS GEOLOCATION TRACKING (omitted for brevity) ---
     function startTracking() {
         if (!("geolocation" in navigator)) {
             document.getElementById('status-message').textContent = "Error: Geolocation not supported.";
@@ -896,11 +848,10 @@
             watchId = null;
         }
 
-        // Quick refresh for speed
         const options = {
             enableHighAccuracy: true,
             timeout: 10000,
-            maximumAge: 500
+            maximumAge: 5000
         };
 
         watchId = navigator.geolocation.watchPosition(
@@ -916,32 +867,21 @@
                     ? position.coords.speed * 3.6
                     : 0;
                 const roundedSpeedKmh = Math.round(speedKmh);
-
-                // 1. Update Current Speed Display
                 document.getElementById('current-speed-value').textContent = roundedSpeedKmh;
-                if (currentSpeedValueHud) {
-                    currentSpeedValueHud.textContent = roundedSpeedKmh;
-                }
 
-                // 2. Update User Marker, Accuracy Circle, Map Panning, and Rotation (logic preserved)
                 if (userMarker) {
                     userMarker.setLatLng(userCoords);
                     accuracyCircle.setLatLng(userCoords).setRadius(accuracy);
                 } else {
                     userMarker = L.marker(userCoords, {
-                        icon: L.divIcon({
-                            className: 'custom-user-marker',
-                            iconSize: [40, 40],
-                            iconAnchor: [20, 20],
-                            html: '<span class="material-symbols-outlined">navigation</span>'
-                        })
+                        icon: L.divIcon({ className: 'custom-user-marker', iconSize: [40, 40], iconAnchor: [20, 20], html: '<span class="material-symbols-outlined">navigation</span>' })
                     }).addTo(map).bindPopup("Your Location");
 
                     accuracyCircle = L.circle(userCoords, accuracy, {
                         weight: 1, fillColor: '#4285F4', fillOpacity: 0.1, color: '#4285F4', opacity: 0.5
                     }).addTo(map);
 
-                    map.setView(userCoords, DEFAULT_ZOOM, { animate: false });
+                    map.setView(userCoords, DEFAULT_ZOOM, { animate: true, duration: 0.5 });
                 }
 
                 const iconSpan = userMarker ? userMarker._icon.querySelector('span') : null;
@@ -949,142 +889,97 @@
                 if (isFollowingMode) {
                     if (heading !== null && heading >= 0) {
                         rotateMap(heading);
-                        if (iconSpan) {
-                            iconSpan.style.transform = `rotate(${heading}deg)`;
-                        }
+                        if (iconSpan) { iconSpan.style.transform = `rotate(${heading}deg)`; }
                     } else {
                         rotateMap(0);
-                        if (iconSpan) {
-                            iconSpan.style.transform = '';
-                        }
+                        if (iconSpan) { iconSpan.style.transform = ''; }
                     }
-                    map.panTo(userCoords, { animate: false });
+
+                    // Only pan if tracking is NOT frozen by a manual drag
+                    if (!isTrackingFrozen) {
+                        map.panTo(userCoords, { animate: true, duration: 0.5, easeLinearity: 0.1 });
+                    }
                 } else {
-                    if (rotationTarget) {
-                        rotationTarget.style.transform = '';
-                    }
-                    if (iconSpan && heading !== null && heading >= 0) {
-                         iconSpan.style.transform = `rotate(${heading}deg)`;
-                    } else if (iconSpan) {
-                         iconSpan.style.transform = '';
+                    if (rotationTarget) { rotationTarget.style.transform = ''; }
+                    if (iconSpan && heading !== null && heading >= 0) { iconSpan.style.transform = `rotate(${heading}deg)`;
+                    } else if (iconSpan) { iconSpan.style.transform = ''; }
+
+                    // Update icon if location tracking is active but panning is frozen
+                    if (isTrackingFrozen) {
+                         recenterIcon.textContent = 'location_disabled';
                     }
                 }
                 userMarker.update();
 
-                // 3. Calculate proximity to traps (FIXED LOGIC)
                 let nearestLimit = null;
-                let nearestDistanceKm = Infinity; // Correctly track the shortest distance
                 let nearestTrapName = 'Speed Trap Ahead!';
-                let nearestTrapUniqueId = null;
-
                 let nearbyTraps = [];
+
                 if (geoJsonLayer) {
                     geoJsonLayer.eachLayer(function(layer) {
                         const latlng = layer.getLatLng();
                         const distanceKm = calculateHaversineDistance(userLat, userLng, latlng.lat, latlng.lng);
-                        const props = layer.feature.properties;
+                        const speedLimitValue = layer.feature.properties.name
+                            ? parseFloat(layer.feature.properties.name)
+                            : null;
 
-                        // Robust check for common speed limit property names
-                        let speedLimitValue = props.name ? parseFloat(props.name) : null;
-                        if (speedLimitValue === null || isNaN(speedLimitValue)) {
-                            speedLimitValue = props.limit ? parseFloat(props.limit) : null;
-                        }
-                        if (speedLimitValue === null || isNaN(speedLimitValue)) {
-                            speedLimitValue = props.speed ? parseFloat(props.speed) : null;
-                        }
+                        if (speedLimitValue !== null) {
+                            if (distanceKm <= PROXIMITY_RANGE_KM) {
+                                if (nearestLimit === null || distanceKm < PROXIMITY_RANGE_KM) {
+                                    nearestLimit = Math.round(speedLimitValue);
 
-
-                        if (speedLimitValue !== null && !isNaN(speedLimitValue)) {
-
-                            // 3a. Find the absolute nearest trap (regardless of range)
-                            if (distanceKm < nearestDistanceKm) {
-                                nearestDistanceKm = distanceKm;
-                                nearestLimit = Math.round(speedLimitValue);
-                                nearestTrapUniqueId = layer.feature.id || layer._leaflet_id;
-
-                                // Extract description/name for HUD
-                                const rawDescription = layer.getPopup().getContent();
-                                const addressMatch = rawDescription.match(/設置地址:\s*([^<]*)/);
-                                nearestTrapName = addressMatch && addressMatch[1] ? addressMatch[1].trim() : 'Speed Trap Ahead!';
+                                    const rawDescription = layer.getPopup().getContent();
+                                    const addressMatch = rawDescription.match(/設置地址:\s*([^<]*)/);
+                                    nearestTrapName = addressMatch && addressMatch[1] ? addressMatch[1].trim() : 'Speed Trap Ahead!';
+                                }
                             }
 
-                            // 3b. Collect all traps within LIST_RANGE_KM (5km) for the Info Card list
-                            if (distanceKm <= LIST_RANGE_KM) {
-                                const rawDescription = layer.getPopup().getContent();
-                                const addressMatch = rawDescription.match(/設置地址:\s*([^<]*)/);
-                                const name = addressMatch && addressMatch[1] ? addressMatch[1].trim() : 'Speed Trap';
-                                nearbyTraps.push({ name, distance: distanceKm, speedLimit: speedLimitValue });
-                            }
+                            const rawDescription = layer.getPopup().getContent();
+                            const addressMatch = rawDescription.match(/設置地址:\s*([^<]*)/);
+                            const name = addressMatch && addressMatch[1] ? addressMatch[1].trim() : 'Speed Trap';
+                            nearbyTraps.push({ name, distance: distanceKm, speedLimit: speedLimitValue });
                         }
                     });
                 }
 
-                // 4. Update Top Bar Speed Limit Sign (Browsing Mode & HUD Mode)
                 const speedLimitSign = document.getElementById('speed-limit-value');
                 const speedContainer = document.getElementById('current-speed-container');
 
-                const currentLimit = nearestLimit !== null ? nearestLimit : '--';
-
-                // Update browsing mode speed limit sign (Top Bar)
-                speedLimitSign.textContent = currentLimit;
-
-                // Update HUD mode speed limit sign
-                if (speedLimitValueHud) {
-                    speedLimitValueHud.textContent = currentLimit;
-                }
-
-                // Reset warning state
+                speedLimitSign.textContent = nearestLimit !== null ? nearestLimit : '--';
                 speedContainer.classList.remove('warning');
-                if (speedContainerHud) { speedContainerHud.classList.remove('warning'); }
 
-
-                // 5. Apply warning state and Update Driving Mode HUD Alert
-                const withinProximity = nearestDistanceKm <= PROXIMITY_RANGE_KM;
-
-                if (nearestLimit !== null && roundedSpeedKmh > nearestLimit && withinProximity) {
-                    // Apply warning color in both modes if speeding near a trap
+                if (nearestLimit !== null && roundedSpeedKmh > nearestLimit) {
                     speedContainer.classList.add('warning');
-                    if (speedContainerHud) { speedContainerHud.classList.add('warning'); }
-
-                    if (isDrivingMode) {
-                        drivingAlertHud.classList.add('visible');
-                        document.getElementById('alert-limit-value-hud').textContent = nearestLimit;
-                        document.getElementById('alert-trap-description-hud').textContent = nearestTrapName;
-
-                        // NEW: Speeding Log Logic
-                        if (nearestTrapUniqueId !== lastPassedSpeedTrapId) {
-                            speedingTrapsCount++;
-                            lastPassedSpeedTrapId = nearestTrapUniqueId;
-                            speedingLogCountElement.textContent = speedingTrapsCount;
-                        }
-                    }
-
-                } else {
-                    if (isDrivingMode) {
-                        drivingAlertHud.classList.remove('visible');
-                    }
-                    if (!withinProximity) {
-                         lastPassedSpeedTrapId = null;
-                    }
                 }
 
+                const drivingAlert = document.getElementById('driving-trap-alert');
 
-                // 6. Update the Info Card list (Only when not in driving mode)
-                if (!isDrivingMode) {
+                if (isDrivingMode && nearestLimit !== null) {
+                    drivingAlert.classList.add('visible');
+                    document.getElementById('alert-limit-value').textContent = nearestLimit;
+                    document.getElementById('alert-trap-description').textContent = nearestTrapName;
+                } else {
+                    drivingAlert.classList.remove('visible');
+                }
+
+                if (!isDrivingMode && (Date.now() - lastInfoCardUpdate > INFO_CARD_UPDATE_THROTTLE_MS)) {
+                    lastInfoCardUpdate = Date.now();
+
                     const trapList = document.getElementById('trap-list');
                     trapList.innerHTML = '';
                     nearbyTraps.sort((a, b) => a.distance - b.distance);
 
                     const nearbyStatus = document.getElementById('status-message');
+                    const filteredTraps = nearbyTraps.filter(t => t.distance <= 5);
 
-                    if (nearbyTraps.length > 0) {
+                    if (filteredTraps.length > 0) {
                         nearbyStatus.style.display = 'none';
                     } else {
                         nearbyStatus.style.display = 'block';
                         nearbyStatus.textContent = 'No speed traps found within the search range.';
                     }
 
-                    nearbyTraps.slice(0, 10).forEach(trap => {
+                    filteredTraps.slice(0, 10).forEach(trap => {
                         const listItem = document.createElement('li');
                         const roundedLimit = Math.round(trap.speedLimit);
                         listItem.className = 'trap-item';
@@ -1111,9 +1006,9 @@
                 let userFriendlyMessage = `Error: Tracking failed. (Code: ${error.code})`;
 
                 if (error.code === 1) {
-                    userFriendlyMessage = "❌ **Geolocation Denied!** Please enable location services.";
+                    userFriendlyMessage = "❌ **Geolocation Denied!** Please enable location services for this app in your device/browser settings.";
                 } else if (error.code === 2) {
-                    userFriendlyMessage = "⚠️ **Location Unavailable!** Check GPS signal.";
+                    userFriendlyMessage = "⚠️ **Location Unavailable!** Your position could not be determined. Check GPS signal.";
                 } else if (error.code === 3) {
                     userFriendlyMessage = "⏳ **Location Timeout!** Took too long to get a fix. **Attempting restart...**";
                     if (watchId) {
@@ -1125,8 +1020,6 @@
 
                 statusMsg.innerHTML = userFriendlyMessage;
                 document.getElementById('current-speed-value').textContent = '--';
-                if (currentSpeedValueHud) { currentSpeedValueHud.textContent = '--'; }
-
                 document.getElementById('speed-limit-value').textContent = '--';
                 document.getElementById('current-speed-container').classList.remove('warning');
             },
@@ -1134,7 +1027,7 @@
         );
     }
 
-    // --- Utility Functions ---
+    // --- Utility Functions (omitted for brevity) ---
     function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
         const R = 6371;
         const dLat = (lat2 - lat1) * (Math.PI / 180);
@@ -1150,13 +1043,38 @@
     const infoCard = document.getElementById('info-card');
     function toggleCard() { infoCard.classList.toggle('collapsed'); }
 
-    // Handlers
+    // Event Listeners
     document.getElementById('exit-driving-mode-button').addEventListener('click', toggleDrivingMode);
     document.getElementById('driving-mode-button').addEventListener('click', toggleDrivingMode);
     document.getElementById('zoom-in-button').addEventListener('click', zoomIn);
     document.getElementById('zoom-out-button').addEventListener('click', zoomOut);
 
     document.getElementById('map-theme-toggle').addEventListener('click', toggleMapTheme);
+
+    // Settings Button Handlers
+    document.getElementById('settings-button').addEventListener('click', showSettings);
+    document.getElementById('close-settings').addEventListener('click', hideSettings);
+
+    // Global Dark Mode Checkbox Handler
+    globalDarkModeSwitch.addEventListener('change', toggleUIDarkMode);
+
+    // Proximity Slider Logic
+    proximitySlider.addEventListener('input', (e) => {
+        PROXIMITY_RANGE_KM = parseFloat(e.target.value);
+        updateProximityDisplay(PROXIMITY_RANGE_KM);
+    });
+    proximitySlider.addEventListener('change', saveSettings);
+
+    // Map Theme Radio Logic
+    themeRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            const newTheme = e.target.value;
+            const newIsLightMode = (newTheme === 'light');
+            if (newIsLightMode !== isLightMode) {
+                toggleMapTheme();
+            }
+        });
+    });
 
 
     // Recenter and Rotation Toggle Logic
@@ -1165,6 +1083,9 @@
             map.setView(map.getCenter(), map.getZoom());
             return;
         }
+
+        // 1. Unfreeze tracking and force pan
+        isTrackingFrozen = false;
 
         if (!isDrivingMode) {
             isHeadingUpMode = !isHeadingUpMode;
@@ -1177,59 +1098,50 @@
         } else {
             recenterIcon.textContent = 'my_location';
 
-            if (rotationTarget) {
-                rotationTarget.style.transform = '';
-            }
-            if (iconSpan) {
-                iconSpan.style.transform = '';
-            }
+            if (rotationTarget) { rotationTarget.style.transform = ''; }
+            if (iconSpan) { iconSpan.style.transform = ''; }
         }
 
-        map.setView(userMarker.getLatLng(), map.getZoom());
+        // Ensure centering on pin with animation
+        map.setView(userMarker.getLatLng(), map.getZoom(), { animate: true, duration: 0.5 });
     });
 
-    // Traffic Overlay Logic
+    // Leaflet Drag Listener to Freeze Tracking
+    map.on('dragstart', () => {
+        if (!isDrivingMode) {
+            isTrackingFrozen = true;
+            recenterIcon.textContent = 'location_disabled';
+        }
+    });
+
+
+    // Traffic Overlay Logic (omitted for brevity)
     function closeTrafficView() {
         trafficOverlay.style.display = 'none';
-        if (!isDrivingMode) {
-            trafficFab.style.display = 'block';
-        }
+        if (!isDrivingMode) { trafficFab.style.display = 'block'; }
     }
 
-    trafficFab.addEventListener('click', () => {
-        trafficOverlay.style.display = 'block';
-        trafficFab.style.display = 'none';
-    });
+    trafficFab.addEventListener('click', () => { trafficOverlay.style.display = 'block'; trafficFab.style.display = 'none'; });
 
-    closeTrafficButton.addEventListener('click', (e) => {
-        e.stopPropagation();
-        closeTrafficView();
-    });
+    closeTrafficButton.addEventListener('click', (e) => { e.stopPropagation(); closeTrafficView(); });
 
     trafficOverlay.addEventListener('click', (e) => {
-        if (e.target.id === 'traffic-overlay') {
-            closeTrafficView();
-        }
+        if (e.target.id === 'traffic-overlay') { closeTrafficView(); }
     });
 
 
     // --- INITIAL STARTUP ---
     document.addEventListener('DOMContentLoaded', () => {
+        // 1. Load User Preferences from cookies
+        loadSettings();
+
+        // 2. Initialize Map Structure
         initializeMapTheme();
         initializeRotationTarget();
+
+        // 3. Invalidate map size and load data
+        map.invalidateSize();
         loadGeojsonData();
-
-        // --- Splash Screen Logic ---
-        const splashScreen = document.getElementById('splash-screen');
-        setTimeout(() => {
-            splashScreen.classList.add('fade-out');
-
-            splashScreen.addEventListener('transitionend', () => {
-                splashScreen.remove();
-                map.invalidateSize();
-            }, { once: true });
-
-        }, 1500);
     });
 
     // --- ANDROID NATIVE COMMUNICATION (For backward compatibility) ---
