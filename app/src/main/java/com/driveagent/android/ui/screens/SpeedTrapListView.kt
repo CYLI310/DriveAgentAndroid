@@ -40,14 +40,16 @@ fun SpeedTrapListView(
         }
     }
     
+    // Using Surface with Tonal Elevation for a standard M3 container look
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .height(450.dp)
-            .padding(horizontal = 20.dp),
-        shape = RoundedCornerShape(24.dp),
+            .heightIn(max = 500.dp)
+            .padding(horizontal = 24.dp), // Increased side padding
+        shape = RoundedCornerShape(28.dp), // M3 extra large shape
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 2.dp
+        tonalElevation = 3.dp,
+        shadowElevation = 6.dp
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
@@ -56,17 +58,22 @@ fun SpeedTrapListView(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(horizontal = 24.dp, vertical = 20.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = languageManager.localize("Nearby Speed Cameras", language),
+                    text = languageManager.localize("Nearby Cameras", language),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
                 
-                IconButton(onClick = onClose) {
+                IconButton(
+                    onClick = onClose,
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    )
+                ) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = languageManager.localize("Close", language)
@@ -74,12 +81,18 @@ fun SpeedTrapListView(
                 }
             }
             
-            Divider()
+            Divider(
+                modifier = Modifier.padding(horizontal = 24.dp),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+            )
             
             // List
             if (nearbyTraps.isEmpty()) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(24.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -90,8 +103,8 @@ fun SpeedTrapListView(
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(nearbyTraps) { trap ->
@@ -109,72 +122,61 @@ private fun SpeedTrapItem(
     languageManager: LanguageManager,
     language: AppLanguage
 ) {
-    Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        tonalElevation = 1.dp
+    OutlinedCard(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.outlinedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.CameraAlt,
-                contentDescription = null,
-                modifier = Modifier.size(32.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-            
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
+        ListItem(
+            headlineContent = {
                 Text(
                     text = trap.address,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.SemiBold
                 )
-                
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = formatDistance(trap.distance),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                    )
-                    
+            },
+            supportingContent = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = formatDistance(trap.distance))
                     if (trap.direction.isNotEmpty()) {
-                        Text(
-                            text = "•",
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                        )
-                        
-                        Text(
-                            text = trap.direction,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        Text(text = " • ", color = MaterialTheme.colorScheme.outline)
+                        Text(text = trap.direction)
+                    }
+                }
+            },
+            leadingContent = {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.CameraAlt,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
+            },
+            trailingContent = {
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    border = null
+                ) {
+                    Text(
+                        text = trap.speedLimit.replace(".0", ""),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                    )
+                }
             }
-            
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = MaterialTheme.colorScheme.primaryContainer
-            ) {
-                Text(
-                    text = "${trap.speedLimit.replace(".0", "")} km/h",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                )
-            }
-        }
+        )
     }
 }
 
@@ -182,6 +184,6 @@ private fun formatDistance(meters: Double): String {
     return if (meters < 1000) {
         "${meters.toInt()}m"
     } else {
-        String.format("%.1f km", meters / 1000)
+        java.lang.String.format(java.util.Locale.US, "%.1f km", meters / 1000)
     }
 }
